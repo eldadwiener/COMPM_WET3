@@ -1,0 +1,16 @@
+void main()
+{
+	a:int;
+        b:int;
+
+	read(a);
+	read(b);
+	if a < b then write(a);
+	else write(b);
+	{ # Start new BLK with local var a
+		a: int;
+	        a = b + 256;
+        	write("\na'="); write(a);
+    }
+    write("\nat main BLK a="); write(a); write("\n");
+}
