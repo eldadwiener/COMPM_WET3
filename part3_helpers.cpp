@@ -2,6 +2,13 @@
 /* part3_helpers.cpp - Helper functions for project part 3 - implementation  */
 #include <stdio.h>
 #include "part3_helpers.hpp"
+#include <sstream>
+
+string intToString(int num) {
+  std::ostringstream stream;
+  stream << std::dec << num;
+  return stream.str();
+}
 
 void CodeBuffer::emit(string code) {
     this->code.push_back(code);
@@ -19,6 +26,8 @@ int CodeBuffer::nextQuad() {
 }
 
  
+Symbol::Symbol(int offset, types type): offset(offset), type(type) {}
+
 void SymbolTable::enterBlock() {
 	map <string, Symbol> newMap;
 	symTable.push_back(newMap);
@@ -47,5 +56,6 @@ Symbol SymbolTable::getVar(string varName) {
 			return itr->second;
 		}
 	}
-	return NULL;
+  Symbol errSymbol(-1,cmm_int); // TODO: make sure we check for this
+	return errSymbol;
 }

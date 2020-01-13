@@ -1,15 +1,15 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
-#include "part2_helpers.h"
-#include "part2.tab.h"
+#include "part3_helpers.hpp"
+#include "part3.tab.h"
 
 void LexErr();
 void printstr();
 %}
 
 %option yylineno noyywrap
-%option   outfile="part2-lex.c" header-file="part2-lex.h"
+%option   outfile="part3-lex.c" header-file="part3-lex.h"
 
 digit       ([0-9])
 letter      ([a-zA-Z])
@@ -26,19 +26,19 @@ muldiv      ("*"|"/")
 
 
 %%
-int                              { yylval = makeNode("int", NULL, NULL) ; return int_tok; }
-float                            { yylval = makeNode("float", NULL, NULL) ; return float_tok; }
-void                             { yylval = makeNode("void", NULL, NULL) ; return void_tok; }
-write                            { yylval = makeNode("write", NULL, NULL) ; return write_tok; }
-read                             { yylval = makeNode("read", NULL, NULL) ; return read_tok; }
-while                            { yylval = makeNode("while", NULL, NULL) ; return while_tok; }
-do                               { yylval = makeNode("do", NULL, NULL) ; return do_tok; }
-if                               { yylval = makeNode("if", NULL, NULL) ; return if_tok; }
-then                             { yylval = makeNode("then", NULL, NULL) ; return then_tok; }
-else                             { yylval = makeNode("else", NULL, NULL) ; return else_tok; }
-return                           { yylval = makeNode("return", NULL, NULL) ; return return_tok; }
-volatile                         { yylval = makeNode("volatile", NULL, NULL) ; return volatile_tok; }
-{sign}                           { yylval = makeNode(yytext, NULL, NULL) ; return yytext[0]; }
+int                              { return int_tok; }
+float                            { return float_tok; }
+void                             { return void_tok; }
+write                            { return write_tok; }
+read                             { return read_tok; }
+while                            { return while_tok; }
+do                               { return do_tok; }
+if                               { return if_tok; }
+then                             { return then_tok; }
+else                             { return else_tok; }
+return                           { return return_tok; }
+volatile                         { return volatile_tok; }
+{sign}                           { yylval.name = yytext[0]; return yytext[0]; }
 {id}                             { yylval = makeNode("id" , yytext, NULL) ; return id_tok; }
 {num}                            { yylval = makeNode("num" , yytext, NULL) ; return num_tok; }
 {str}                            {

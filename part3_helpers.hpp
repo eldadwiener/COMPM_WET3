@@ -13,6 +13,8 @@ using namespace std;
 
 enum types { cmm_int, cmm_float, cmm_pint, cmm_void, cmm_volatile };
 
+string intToString(int num);
+
 class CodeBuffer {
     public:
         void emit(string code);
