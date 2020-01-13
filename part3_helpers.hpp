@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <list>
 
 using namespace std;
 
@@ -14,13 +15,12 @@ enum types { cmm_int, cmm_float, cmm_pint, cmm_void, cmm_volatile };
 
 class CodeBuffer {
     public:
-        CodeBuffer();
         void emit(string code);
-        void backPatch( /* TODO: truelist , quad */ );
+        void backPatch(vector<int>& list, int quad);
         int nextQuad();
 
     private:
-        vector<string> code;
+        vector<string> code; // TODO: should we append directly to the file?
 };
 
 class Node {
@@ -36,7 +36,7 @@ class Node {
 
         // remember function args to check if call is good
         vector<types> argTypes;
-        // List of parameters registers' numbers in function's defenition
+        // List of parameters register numbers
         vector<int> argRegs; 
 };
 
@@ -49,13 +49,13 @@ class Symbol {
 
 class SymbolTable {
     public:
-        void enterBlock();
-        void leaveBlock();
+        void enterBlock(); // mark a new depth level was entered
+        void leaveBlock(); // remove the deepest level
         bool putVar(string varName, Symbol var);
         Symbol getVar(string varName);
 
     private:
-        vector<map<string, Symbol>> symTable;
+        list<map<string, Symbol>> symTable;
 
 };
 
