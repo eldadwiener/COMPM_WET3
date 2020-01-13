@@ -38,21 +38,21 @@ then                             { return then_tok; }
 else                             { return else_tok; }
 return                           { return return_tok; }
 volatile                         { return volatile_tok; }
-{sign}                           { yylval.name = yytext[0]; return yytext[0]; }
-{id}                             { yylval = makeNode("id" , yytext, NULL) ; return id_tok; }
-{num}                            { yylval = makeNode("num" , yytext, NULL) ; return num_tok; }
+{sign}                           { yylval.name = yytext[0] ; return yytext[0]; }
+{id}                             { yylval.name = strdup(yytext) ; return id_tok; }
+{num}                            { yylval.name = strdup(yytext) ; return num_tok; }
 {str}                            {
                                     yytext[yyleng - 1] = 0;
-                                    yylval = makeNode("str" , yytext + 1, NULL) ;
+                                    yylval.name = strdup(yytext + 1) ;
                                     return str_tok;
-                                    }
-{rel}                            { yylval = makeNode("relop" , yytext, NULL) ; return relop_tok; }
-{addsub}                         { yylval = makeNode("addop" , yytext, NULL) ; return addop_tok; }
-{muldiv}                         { yylval = makeNode("mulop" , yytext, NULL) ; return mulop_tok; }
-"="                              { yylval = makeNode("assign" , yytext, NULL) ; return assign_tok; }
-"&&"                             { yylval = makeNode("and" , yytext, NULL) ; return and_tok; }
-"||"                             { yylval = makeNode("or" , yytext, NULL) ; return or_tok; }
-"!"                              { yylval = makeNode("not" , yytext, NULL) ; return not_tok; }
+                                 }
+{rel}                            { yylval.name = strdup(yytext) ; return relop_tok; }
+{addsub}                         { yylval.name = yytext[0] ; return addop_tok; }
+{muldiv}                         { yylval.name = yytext[0] ; return mulop_tok; }
+"="                              { return assign_tok; }
+"&&"                             { return and_tok; }
+"||"                             { return or_tok; }
+"!"                              { return not_tok; }
 {whitespace}                     ;
 {comment}                        ;
 .                                LexErr();

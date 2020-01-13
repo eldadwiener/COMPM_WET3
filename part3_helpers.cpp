@@ -22,7 +22,7 @@ void CodeBuffer::backPatch(vector<int>& list, int quad) {
 }
 
 int CodeBuffer::nextQuad() {
-    return this->code.size();
+    return this->code.size() + 1;
 }
 
  

@@ -75,7 +75,7 @@ static map<string, FunctionInformation> unimplementedFunctions;
 static CodeBuffer codeBuf;
 // TODO: how many registers should we save for our use?
 static int nextFreeRegI = 3; // next empty int reg
-static int nextFreeRegF = 3; // next empty float reg
+static int nextFreeRegF = 0; // next empty float reg
 
 static int stackPointer = 0;
 static int framePointer = 0;
