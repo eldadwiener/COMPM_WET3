@@ -20,17 +20,32 @@ int CodeBuffer::nextQuad() {
 
  
 void SymbolTable::enterBlock() {
-
+	map <string, Symbol> newMap;
+	symTable.push_back(newMap);
 }
 
 void SymbolTable::leaveBlock() {
-
+	symTable.pop_back();
 }
 
 bool SymbolTable::putVar(string varName, Symbol var) {
-
+	map <string, Symbol > myMap = symTable.back();
+	if (myMap.find(varName) != myMap.end()) //allready exist
+	{
+		return false;
+	}
+	myMap.insert(std::pair<string, Symbol>(varName, var));
+	return true;
 }
 
 Symbol SymbolTable::getVar(string varName) {
-
+	list<map <string, Symbol>>::reverse_iterator rit = symTable.rbegin();
+	for (; rit != symTable.rend(); ++rit) {
+		map <string, Symbol> & curMap = (*rit);
+		map <string, Symbol>::iterator itr = curMap.find(varName);
+		if (itr != curMap.end()) {
+			return itr->second;
+		}
+	}
+	return NULL;
 }
