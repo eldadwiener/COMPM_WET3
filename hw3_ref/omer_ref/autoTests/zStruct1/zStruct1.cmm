@@ -1,0 +1,8 @@
+struct foo {
+	bar : int;
+};
+void main() {
+	x:foo;
+	x.bar = 5;
+	write(x.bar);
+}

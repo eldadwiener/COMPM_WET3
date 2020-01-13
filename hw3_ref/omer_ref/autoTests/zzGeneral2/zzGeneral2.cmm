@@ -1,0 +1,23 @@
+struct foo {
+	bar : int;
+};
+
+int func1(z:foo){
+	write(z.bar);
+	z.bar = 1000;
+	write(z.bar);
+	return 3;
+}
+
+int returnSt (x:foo){
+	a:int;
+	a=2;
+	write(a);
+	func1(x);
+	return x.bar;
+}
+void main() {
+	x,y:foo;
+	read(x.bar);
+	write(returnSt(x));
+}

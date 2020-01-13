@@ -1,0 +1,12 @@
+void main() {
+	a,b:float;
+	c,d:int;
+	a = 5.2;
+	c = 3;
+	d = (int)a + c;
+	write(d);
+	b = (float)d + a;
+	write(b);
+	write((int)b);
+	write((float)d);
+}

@@ -1,0 +1,51 @@
+struct foo {
+	bar : int;
+};
+
+struct mainStruct {
+	foo1 : foo;
+	bar2 : int;
+};
+
+void main() {
+	x,y:mainStruct;
+	read(x.foo1.bar);
+	read(x.bar2);
+	read(y.foo1.bar);
+	read(y.bar2);
+	{
+		write(x.foo1.bar);
+		write(x.bar2);
+		write(y.foo1.bar);
+		write(y.bar2);
+	}
+	write(x.foo1.bar);
+	write(x.bar2);
+	write(y.foo1.bar);
+	write(y.bar2);
+	{
+		read(x.foo1.bar);
+		read(x.bar2);
+		read(y.foo1.bar);
+		read(y.bar2);
+	}
+	write(x.foo1.bar);
+	write(x.bar2);
+	write(y.foo1.bar);
+	write(y.bar2);
+	{
+		x,y:mainStruct;
+		read(x.foo1.bar);
+		read(x.bar2);
+		read(y.foo1.bar);
+		read(y.bar2);
+		write(x.foo1.bar);
+		write(x.bar2);
+		write(y.foo1.bar);
+		write(y.bar2);
+	}
+	write(x.foo1.bar);
+	write(x.bar2);
+	write(y.foo1.bar);
+	write(y.bar2);
+}

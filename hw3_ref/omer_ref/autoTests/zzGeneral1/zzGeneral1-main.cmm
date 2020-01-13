@@ -1,0 +1,18 @@
+struct foo {
+	bar : int;
+};
+int foo2(y:int);
+int foo3(x:foo){
+	write(x.bar);
+	return foo2(x.bar);
+}
+
+void main() {
+	a,b:int;
+	avi:foo;
+	avi.bar=888;
+    a = foo3(avi);
+	write(a);
+    read(avi.bar);
+	write(avi.bar);
+}

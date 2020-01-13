@@ -1,0 +1,12 @@
+<header>
+<unimplemented>
+<implemented> main,1
+</header>
+ADD2I I2 I2 8
+ADD2I I3 I1 4
+COPYI I4 5
+STORI I4 I3 0
+LOADI I5 I1 4
+PRNTI I5
+RETRN
+HALT

@@ -1,0 +1,15 @@
+<header>
+<unimplemented>
+<implemented> main,1
+</header>
+ADD2I I2 I2 8
+CITOF F1 I1
+ADD2F F3 F1 4
+READF F4
+STORF F4 F3 0
+CITOF F1 I1
+ADD2F F5 F1 0
+READF F6
+STORF F6 F5 0
+RETRN
+HALT

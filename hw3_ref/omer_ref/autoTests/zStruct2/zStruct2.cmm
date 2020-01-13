@@ -1,0 +1,34 @@
+struct foo {
+	bar : int;
+};
+
+struct fooHasFoo {
+	bar : int;
+	foo3 : foo;
+	bar2 : int;
+};
+
+struct mainStruct {
+	bigFoo : fooHasFoo;
+	foo1 : foo;
+	bar2 : int;
+};
+
+void main() {
+	mainS:mainStruct;
+	mainS.bar2 = 3;
+	write(mainS.bar2);
+	mainS.foo1.bar = 4;
+	mainS.bigFoo.bar = 5;
+	mainS.bigFoo.foo3.bar = 6;
+	mainS.bigFoo.bar2 = 7;
+
+	
+	read(mainS.foo1.bar);
+	write(mainS.foo1.bar);
+	
+	write(mainS.bigFoo.bar);
+	write(mainS.bigFoo.foo3.bar);
+	write(mainS.bigFoo.bar2);
+	
+}

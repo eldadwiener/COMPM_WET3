@@ -1,0 +1,13 @@
+<header>
+<unimplemented>
+<implemented> foo2,1
+</header>
+LOADI I3 I1 -8
+COPYI I4 1
+ADD2I I5 I3 I4
+PRNTI I5
+COPYI I6 1
+STORI I6 I1 -4
+RETRN
+RETRN
+HALT

@@ -1,0 +1,6 @@
+int foo2(y:int)
+{
+	write(y + 1);
+	return 1;
+}
+

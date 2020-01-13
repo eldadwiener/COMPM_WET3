@@ -1,0 +1,22 @@
+struct foo {
+	bar : int;
+	bar1 : int;
+	bar2 : int;
+	bar4 : int;
+	bar5 : int;
+	bar6 : float;
+	bar7 : int;
+
+};
+
+int func1(a: float, z:foo, l:float, l1:float){
+	return 3;
+}
+
+void main() {
+	x,y:foo;
+	z,z1,z2:float;
+	a:int;
+	a=func1(z,x,z1,z2);
+	write(a);
+}

@@ -1,0 +1,40 @@
+struct foo {
+	bar : int;
+	bar1 : int;
+	bar2 : int;
+	bar4 : int;
+
+};
+
+int func1(z:foo, l:float){
+	write(z.bar);
+	l=7.7;
+	z.bar = 1000;
+	write(z.bar);
+	return 3;
+}
+
+int returnSt(x1:foo, y1:float){
+	write(x1.bar);
+	a:int;
+	a=2;
+	write(a);
+	write(y1);
+	write(" aaa ");
+	write(x1.bar);
+	x1.bar1 = func1(x1,y1);
+	write(x1.bar1);
+	write(x1.bar);
+	return x1.bar;
+}
+void main() {
+	x,y:foo;
+	z:float;
+	a:int;
+	z=2.5;
+	x.bar=5;
+	write(x.bar);
+	a=returnSt(x,z);
+	write(x.bar);
+	write(a);
+}

@@ -1,0 +1,81 @@
+struct foo {
+	bar : int;
+};
+
+struct fooHasFoo {
+	bar : int;
+	foo3 : foo;
+	bar2 : int;
+};
+
+struct mainStruct {
+	bigFoo : fooHasFoo;
+	foo1 : foo;
+	bar2 : int;
+};
+
+void main() {
+	a:int;
+	a = 99;
+	write(a);
+	mainS:mainStruct;
+	mainS.bar2 = 3;
+	mainS.bigFoo.foo3.bar = 66;
+	write(mainS.bar2);
+	{
+		a:int;
+		read(a);
+		b:int;
+		b=a*2;
+		write(b);
+		a=100;
+		write(a);
+		write(b);
+		write(mainS.bar2);
+		write(mainS.bigFoo.foo3.bar);
+		mainS:mainStruct;		
+		read(mainS.bar2);
+		mainS.bigFoo.foo3.bar = 23;
+		a=54;
+		read(mainS.bigFoo.bar2);
+		read(mainS.bigFoo.bar);
+		write(mainS.bar2);
+		write(a);
+		write(mainS.bigFoo.foo3.bar);
+		write(mainS.bigFoo.bar);
+		write(mainS.bigFoo.bar2);
+		{
+			mainS:mainStruct;		
+			read(mainS.bar2);
+			read(mainS.bigFoo.foo3.bar);
+			write(mainS.bar2);
+			write(mainS.bigFoo.foo3.bar);
+			{
+				avi:fooHasFoo;
+				read(avi.bar);
+				read(avi.bar2);
+				read(avi.foo3.bar);
+				write(avi.bar);
+				write(avi.bar2);
+				write(avi.foo3.bar);
+			}
+		
+		}
+
+	}
+	write(a);
+	write(mainS.bar2);
+	mainS.foo1.bar = 4;
+	mainS.bigFoo.bar = 5;
+	mainS.bigFoo.foo3.bar = 6;
+	mainS.bigFoo.bar2 = 7;
+
+	
+	read(mainS.foo1.bar);
+	write(mainS.foo1.bar);
+	
+	write(mainS.bigFoo.bar);
+	write(mainS.bigFoo.foo3.bar);
+	write(mainS.bigFoo.bar2);
+	
+}

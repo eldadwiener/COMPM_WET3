@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# this script compiles, linkes and runs cmm files
+TEST_ROOT="."
+testdirs=`ls -d */`
+
+
+! [ -e ./rx-cc ] && echo "Error - ./rx-cc does not exist" && exit 
+! [ -e ./rx-linker ] && echo "Error - ./rx-linker does not exist" && exit
+! [ -e ./rx-vm ] && echo "Error - ./rx-vm does not exist" && exit
+ 
+for dir in ${testdirs[@]}
+do
+	sourcefiles=`ls $TEST_ROOT/"$dir"/*.cmm`
+	i=0
+	for filename_cmm in ${sourcefiles[@]}; do
+		if [[ $filename_cmm != *.cmm ]]; then
+			echo Illegal filename $filename_cmm. only "*.cmm" files are allowed
+			exit	
+		fi
+		filename_rsk[$i]=${filename_cmm%.cmm}.rsk
+		echo running test $filename_cmm
+		./rx-cc $filename_cmm || exit
+		(( i++ ))
+	done
+	
+	#echo "./rx-linker ${filename_rsk[@]} || exit"
+	./rx-linker ${filename_rsk[@]} || exit
+
+	main=${filename_rsk[0]}
+	#echo "main = $main"
+	
+#	 ./rx-vm ${main%.rsk}.e < $TEST_ROOT/"$dir"/a.input > $TEST_ROOT/"$dir"/a.output
+	 #echo "./rx-vm out.e < $TEST_ROOT/"$dir"/a.input > $TEST_ROOT/"$dir"/a.output"
+	 ./rx-vm out.e < $TEST_ROOT/"$dir"/a.input > $TEST_ROOT/"$dir"/a.output
+	 echo diff $TEST_ROOT/"$dir"/a.output $TEST_ROOT/"$dir"/a.exp -eq 0
+	 if [[ `diff $TEST_ROOT/"$dir"/a.output $TEST_ROOT/"$dir"/a.exp` -eq 0 ]]; then
+	 	echo passed
+	else
+		echo failed
+	 fi
+	 unset filename_rsk
+	
+done

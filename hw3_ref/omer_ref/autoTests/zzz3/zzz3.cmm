@@ -1,0 +1,78 @@
+struct foo {
+	bar : int;
+	bar1 : float;
+	bar2 : int;
+	bar3 : float;
+};
+
+struct foo1 {
+	bee : int;
+	bee1 : int;
+	bee2 : float;
+	bee3 : int;
+};
+
+
+float func2(a:foo1, b:float, c:int){ #(0-4 1-6 2-15.0 3-10), 7.5, 6
+	write(a.bee2); 
+	write(a.bee1);
+	write(b);
+	write(c);
+	a.bee3 = c + a.bee1; #12
+	a.bee = 4;
+	a.bee3 = a.bee3 + a.bee;
+	write(a.bee3);
+	a.bee2 = b - 1.1;
+	write(a.bee2);
+	return a.bee2;
+}
+
+
+int func1(a:int, b:foo, c:float, d:foo1){ #10,(0-5,3-15.3),7.5,(1-6,2-16.1)
+	write(b.bar);
+	write(d.bee2);
+	e:int; 
+	f:float;
+	f = c + d.bee2;
+	write(f);
+	e = a - b.bar;
+	write(e);
+	b.bar1 = f - 2.4;
+	write(b.bar1);
+	b.bar1 = func2(d,f,e);
+	write(b.bar1);
+	b.bar2 = 5;
+	d.bee3 = e + b.bar2;
+	write("Avi \n\r\n\r\n\r\n \"Dan\" \t\t\t\t Hannah!!");
+	return d.bee3;
+}
+
+void main() {
+	a,b:float;
+	c,d:int;
+	avi:foo;
+	avi.bar = 5;
+	write(avi.bar);
+	{
+		avi:foo;
+		avi.bar = 6;
+		write(avi.bar);
+		
+	}
+	write(avi.bar);
+	dan:foo1;
+	read(a);
+	read(b);
+	c = 10;
+	d = 11;
+	read(avi.bar);
+	read(avi.bar3);
+	read(dan.bee1);
+	read(dan.bee2);
+	write(avi.bar);
+	avi.bar = func1(c,avi,b,dan);
+	write(avi.bar);
+	write(dan.bee2);
+	dan.bee2 = func2(dan,b,dan.bee1);
+	write(dan.bee2);
+}
