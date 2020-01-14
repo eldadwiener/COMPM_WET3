@@ -29,7 +29,7 @@ class Node {
     public:
         string name; // id of node if applicable 
         types type; // type of param, if applicable
-        int offset;
+        int offset; // offset from I1, this is where the variable is located in the stack if applicable
         int quad; // quad for use in markers
         int place; // register number allocated for this nodes intermediate value.
         vector<int> nextList;
@@ -71,7 +71,7 @@ class FunctionInformation {
 
 static SymbolTable symTable;
 static map<string, FunctionInformation> implementedFunctions;
-static map<string, FunctionInformation> unimplementedFunctions;
+static map<string, FunctionInformation> declaredFunctions;
 static CodeBuffer codeBuf;
 // TODO: how many registers should we save for our use?
 static int nextFreeRegI = 3; // next empty int reg
