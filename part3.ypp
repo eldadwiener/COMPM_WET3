@@ -226,12 +226,38 @@ ASSN_C:
 ;
 
 LVAL:
-                id_tok{ $$ = makeNode("LVAL", NULL, $1); }
+                id_tok{
+					Symbol &idSymbol = symTable.getVar($1.name);
+					// make sure the id exists
+					if (idSymbol.offset == -1) {
+						// id does not exist
+						semanticError("variable '" + $1.name + "' is not declared");
+					}
+					$$.type = idSymbol.type;
+					$$.offset = idSymbol.offset;
+					if ($$.type == cmm_float) {
+						codeBuf.emit("CITOF F" + intToString(nextFreeRegF) + " I1");
+						codeBuf.emit("LOADF F" + intToString(nextFreeRegF) + " F" + intToString(nextFreeRegF) + " " intToString(idSymbol.offset));
+						$$.place = nextFreeRegF;
+						++nextFreeRegF;
+					}
+					else { // int/volatile/pint
+						codeBuf.emit("LOADI I" + intToString(nextFreeRegI) + " I1 " + intToString(idSymbol.offset));
+						$$.place = nextFreeRegI;
+						++nextFreeRegI;
+					}
+				}
             |
                 '@'EXP{
-                        $$ = makeNode("LVAL", NULL, $1);
-                        concatList($1, $2);
-                        }
+					// make sure the EXP is a pointer
+					if ($2.type != cmm_pint) {
+						semanticError("Trying to dereference a non-pointer variable");
+					}
+					codeBuf.emit("LOADI I" + intToString(nextFreeRegI)) + " I1 I" + intToString($2.place) ); // TODO: I1 or I2 here?
+					$$.place = nextFreeRegI;
+					++nextFreeRegI;
+					$$.type = cmm_int;
+				}
 ;
 
 // control statements (if-else, while-do)
