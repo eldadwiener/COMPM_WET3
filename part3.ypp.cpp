@@ -175,31 +175,39 @@ RETURN:
 
 
 WRITE:
-                write_tok '(' EXP ')' ';'{
-                                            $$ = makeNode("WRITE", NULL, $1);
-                                            concatList($1, $2);
-                                            concatList($1, $3);
-                                            concatList($1, $4);
-                                            concatList($1, $5);
-                                            }
-            |
-                write_tok '(' str_tok ')' ';'{
-                                                $$ = makeNode("WRITE", NULL, $1);
-                                                concatList($1, $2);
-                                                concatList($1, $3);
-                                                concatList($1, $4);
-                                                concatList($1, $5);
-                                                }
-;
+			write_tok '(' EXP ')' ';'{
+				if ($3.type == cmm_float) {
+					codeBuf.emit("PRNTF " + $3.place);
+				}
+				else {
+					codeBuf.emit("PRNTI " + $3.place);
+				}
+			}
+			|
+				write_tok '(' str_tok ')' ';'{
+				string str = $3.name;
+				for (int i = 0; i < str.size(); ++i) {
+					codeBuf.emit("PRNTC " + str[i]);//TODO: what about escaped characters?
+				}
+			}
+			;
 
 READ:
-                read_tok '(' LVAL ')' ';'{
-                                                $$ = makeNode("READ", NULL, $1);
-                                                concatList($1, $2);
-                                                concatList($1, $3);
-                                                concatList($1, $4);
-                                                concatList($1, $5);
-                                                }
+			read_tok '(' LVAL ')' ';'{
+				if ($3.type == cmm_float) {
+					codeBuf.emit("READF F" + intToString($3.place));
+					codeBuf.emit("CITOF F" + intToString(nextFreeRegF) + " I1");
+					codeBuf.emit("STORF F" + intToString($3.place) + " F" + intToString(nextFreeRegF) + " " + intToString($3.offset));
+				}
+				else if ($3.type == cmm_int || $3.type == cmm_volatile) {
+					codeBuf.emit("READI I" + intToString($3.place));
+					codeBuf.emit("STORI I" + intToString($3.place) + " I1" + " " + intToString($3.offset));
+				}
+				else {
+					// id does not exist
+					semanticError("variable '" + $1.name + "' can not be written from IO");
+				}
+			}
 ;
 
 ASSN:
