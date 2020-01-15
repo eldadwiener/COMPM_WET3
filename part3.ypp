@@ -236,34 +236,40 @@ LVAL:
 
 // control statements (if-else, while-do)
 CNTRL:
-                if_tok BEXP then_tok STMT else_tok STMT{
-                                                            $$ = makeNode("CNTRL", NULL, $1);
-                                                            concatList($1, $2);
-                                                            concatList($1, $3);
-                                                            concatList($1, $4);
-                                                            concatList($1, $5);
-                                                            concatList($1, $6);
-                                                            }
+                if_tok BEXP then_tok M STMT N else_tok M STMT{
+					codeBuf.backPatch($2.trueList, $4.quad);
+					codeBuf.backPatch($2.falseList, $8.quad);
+					//merge STMT1.nextList, N.nextList and STMT2.nextList into CNTRL.nextList
+					codeBuf.merge($5.nextList, $6.nextList, $$.nextList);
+					codeBuf.merge($9.nextList, $$.nextList, $$.nextList);
+                 }
             |
-                if_tok BEXP then_tok STMT{
-                                            $$ = makeNode("CNTRL", NULL, $1);
-                                            concatList($1, $2);
-                                            concatList($1, $3);
-                                            concatList($1, $4);
-                                            }
+                if_tok BEXP then_tok M STMT{
+					codeBuf.backPatch($2.trueList, $4.quad);
+					//merge STMT.nextList and BEXP.falseList into CNTRL.nextList
+					codeBuf.merge($5.nextList, $2.falseList, $$.nextList);  
+                 }
             |
-                while_tok BEXP do_tok STMT{
-                                            $$ = makeNode("CNTRL", NULL, $1);
-                                            concatList($1, $2);
-                                            concatList($1, $3);
-                                            concatList($1, $4);
-                                            }
+                while_tok M BEXP do_tok M STMT{
+					codeBuf.backPatch($3.trueList, $5.quad);
+					codeBuf.backPatch($6.nextList, $2.quad);
+					$$.nextList = $3.falseList;
+					codeBuf.emit("UJUMP " + intToString($2.quad));
+                 }
 // boolean expression
 BEXP:
-                BEXP or_tok BEXP{
+                BEXP or_tok M BEXP{
+					//if BEXP1 == false go to BEXP2
+					codeBuf.backPatch($1.falseList, $3.quad); 
+					codeBuf.merge($1.trueList, $4.trueList, $$.trueList);
+					$$.falseList = $4.falseList;
                 }
             |
-                BEXP and_tok BEXP{
+                BEXP and_tok M BEXP{
+					//if BEXP1 == true go to BEXP2
+					codeBuf.backPatch($1.trueList, $3.quad); 
+					codeBuf.merge($1.falseList, $4.falseList, $$.falseList);
+					$$.trueList = $4.trueList;
                 }
             |
                 not_tok BEXP{
@@ -660,17 +666,30 @@ CALL_ARGS:
 
 CALL_ARGLIST:
                 CALL_ARGLIST ',' EXP{
-                                            $$.argTypes = $1.argTypes;
-                                            $$.argRegs = $1.argRegs;
-                                            $$.argTypes.push_back($3.type);
-                                            $$.argRegs.push_back($3.place);       
-                                        }
+					$$.argTypes = $1.argTypes;
+					$$.argRegs = $1.argRegs;
+					$$.argTypes.push_back($3.type);
+					$$.argRegs.push_back($3.place);       
+                }
             |
-                EXP  { $$.argTypes.push_front($1.type); /* TODO: do we need to clear $1 */
-                       $$.argRegs.push_front($1.place); 
-                       }
+                EXP  {
+					$$.argTypes.push_front($1.type); /* TODO: do we need to clear $1 */
+                    $$.argRegs.push_front($1.place); 
+                 }
 ;
 
+M: 
+				/*epsilon*/ {
+					$$.quad = codeBuf.nextQuad();
+				}
+;
+
+N:
+				/*epsilon*/ {
+				$$.nextList = codeBuf.nextQuad();
+				codeBuf.emit("UJUMP ");
+				}
+;
 %%
 
 void yyerror(const char* msg)

@@ -25,7 +25,13 @@ int CodeBuffer::nextQuad() {
     return this->code.size() + 1;
 }
 
- 
+void CodeBuffer::merge(vector<int>& src1, vector<int>& src2, vector<int>& dst) {
+	vector<int> tmp;
+	tmp.insert(tmp.end(), src1.begin(), src1.end());
+	tmp.insert(tmp.end(), src2.begin(), src2.end());
+	dst = tmp;
+}
+
 Symbol::Symbol(int offset, types type): offset(offset), type(type) {}
 
 void SymbolTable::enterBlock() {
