@@ -85,127 +85,193 @@ FUNC_ARGLIST:
 ;
 
 // represents a statements block
-BLK:            '{' STLIST '}' {
-                                    $$ = makeNode("BLK", NULL, $1);
-                                    concatList($1, $2);
-                                    concatList($1, $3);
-                                    }
+BLK:            '{' {symTable.enterBlock();} STLIST {symTable.leaveBlock();}'}' {
+                    $$.nextList = $2.nextList; //TODO: is this $2?
+                }
 ;
 
 // variable declaration
 DCL:            id_tok ':' TYPE {
-                                    $$ = makeNode("DCL", NULL, $1);
-                                    concatList($1, $2);
-                                    concatList($1, $3);
-                                    }
+                    // make sure type is not void
+                    if ($3.type == cmm_void) {
+                        semanticError("Cannot declare void variable");
+                    }
+                    // all definitions will be handled by STMT or the function
+                    $$.type = $3.type;
+                    $$.argDefinitions.push_back($1.name);
+                }
             |
                 id_tok ',' DCL {
-                                    $$ = makeNode("DCL", NULL, $1);
-                                    concatList($1, $2);
-                                    concatList($1, $3);
-                                    }
+                    $$.type = $3.type;
+                    $$.argDefinitions.push_back($1.name);
+                }
 ;
 
 // variable type
 TYPE:
-                int_tok { $$ = makeNode("TYPE", NULL, $1); }
+                int_tok {
+                    $$.type = cmm_int;
+                }
             |
-                float_tok { $$ = makeNode("TYPE", NULL, $1); }
+                float_tok {
+                    $$.type = cmm_float;
+                }
             |
-                void_tok { $$ = makeNode("TYPE", NULL, $1); }
+                void_tok {
+                    $$.type = cmm_void;
+                }
             |
                 int_tok'@' {
-                                $$ = makeNode("TYPE", NULL, $1);
-                                concatList($1, $2);
-                                }
+                    $$.type = cmm_pint;
+                }
             |
                 volatile_tok int_tok {
-                                        $$ = makeNode("TYPE", NULL, $1);
-                                        concatList($1, $2);
-                                        }
+                    $$.type = cmm_volatile;
+                }
 // statement list
 STLIST:
-                STLIST STMT {
-                                $$ = makeNode("STLIST", NULL, $1);
-                                concatList($1, $2);
-                                }
+                STLIST M STMT {
+                    $$.nextList = $3.nextList;
+                    codeBuf.backPatch($1.nextList, $2.quad);
+                }
             |
-               /* epsilon */       { $$ = makeNode("STLIST", NULL, makeNode("EPSILON", NULL, NULL)); }
+               /* epsilon */  {
+               }
 ;
 
 // from here we start defining various statement types
 STMT:
                 DCL ';' {
-                            $$ = makeNode("STMT", NULL, $1);
-                            concatList($1, $2);
-                            }
+                    // go over all declarations, and allocate space for them
+                    for (int i=0; i<$1.argDefinitions.size(); ++i) {
+                        Symbol newVar(currentStackOffset, $1.type);
+                        bool success = symTable.putVar($1.argDefinitions[i], newVar);
+                        // check if the id was already declared in this block
+                        if (!success) {
+                            semanticError("Duplicate variable declaration in the same block");
+                        }
+                        currentStackOffset += 4;
+                    }
+                    
+                    // all variables were successfully added, update stack pointer
+                    codeBuf.emit("ADD2I I2 I2 " + intToString(4*$1.argDefinitions.size()));
+                }
             |
-                ASSN { $$ = makeNode("STMT", NULL, $1); }
+                ASSN {
+                }
             |
                 EXP ';' {
-                            $$ = makeNode("STMT", NULL, $1);
-                            concatList($1, $2);
-                            }
+                }
             |
-                CNTRL { $$ = makeNode("STMT", NULL, $1); }
+                CNTRL {
+                    $$.nextList = $1.nextList;
+                }
             |
-                READ { $$ = makeNode("STMT", NULL, $1); }
+                READ {
+                }
             |
-                WRITE { $$ = makeNode("STMT", NULL, $1); }
+                WRITE {
+                }
             |
-                RETURN { $$ = makeNode("STMT", NULL, $1); }
+                RETURN {
+                }
             |
-                BLK { $$ = makeNode("STMT", NULL, $1); }
+                BLK {
+                    $$.nextList = $1.nextList;
+                }
             |
-                ASSN_C{ $$ = makeNode("STMT", NULL, $1); }
+                ASSN_C {
+                    $$.nextList = $1.nextList;
+                }
 ;
 
 RETURN:
                 return_tok EXP ';'{
-                                    $$ = makeNode("RETURN", NULL, $1);
-                                    concatList($1, $2);
-                                    concatList($1, $3);
-                                    }
+                    if (functionReturnType != $2.type) {
+                        semanticError("Bad return type");
+                    }
+                    // save return value to stack (last value before our frame)
+                    if (functionReturnType == cmm_float) {
+                        codeBuf.emit("CITOF F" + intToString(nextFreeRegF) + " I1");
+                        codeBuf.emit("STORF F" + intToString($2.place) + " F" + intToString(nextFreeRegF) + " -4");
+                    }
+                    else {
+                        codeBuf.emit("STORI I" + intToString($2.place) + " I1 -4");
+                    }
+
+                    // do function end semantics
+                    codeBuf.emit("COPYI I2 I1");
+                    codeBuf.emit("RETRN");
+                }
             |
                 return_tok';'{
-                                $$ = makeNode("RETURN", NULL, $1);
-                                concatList($1, $2);
-                                }
+                    if (functionReturnType != cmm_void) {
+                        semanticError("missing return value in non-void function");
+                    }
+                    // do function end semantics
+                    codeBuf.emit("COPYI I2 I1");
+                    codeBuf.emit("RETRN");
+                }
 ;
 
 
 WRITE:
-			write_tok '(' EXP ')' ';'{
-				if ($3.type == cmm_float) {
-					codeBuf.emit("PRNTF " + $3.place);
-				}
-				else {
-					codeBuf.emit("PRNTI " + $3.place);
-				}
-			}
+                write_tok '(' EXP ')' ';'{
+                    if ($3.type == cmm_float) {
+                        codeBuf.emit("PRNTF F" + $3.place);
+                    }
+                    else {
+                        codeBuf.emit("PRNTI I" + $3.place);
+                    }
+                }
 			|
 				write_tok '(' str_tok ')' ';'{
-				string str = $3.name;
-				for (int i = 0; i < str.size(); ++i) {
-					codeBuf.emit("PRNTC " + str[i]);//TODO: what about escaped characters?
-				}
-			}
-			;
+                    string str = $3.name;
+                    bool seenBackslash = false;
+                    for (int i = 0; i < str.size(); ++i) {
+                        if (str[i] == '\\') {
+                            seenBackslash = true;
+                        }
+                        else {
+                            if (!seenBackslash) {
+                                codeBuf.emit("PRNTC " + str[i]);
+                            }
+                            else { // TODO: check that all these work
+                                // from lex, we know this char must be one of: n, \, "
+                                if (str[i] == "n") {
+                                    codeBuf.emit("PRNTC \n");
+                                }
+                                else if (str[i] == "\\") {
+                                    codeBuf.emit("PRNTC \\");
+                                }
+                                else {
+                                    codeBuf.emit("PRNTC \"");
+                                }
+                            }
+                        }
+                    }
+                }
+;
 
 READ:
 			read_tok '(' LVAL ')' ';'{
 				if ($3.type == cmm_float) {
-					codeBuf.emit("READF F" + intToString($3.place));
-					codeBuf.emit("CITOF F" + intToString(nextFreeRegF) + " I1");
-					codeBuf.emit("STORF F" + intToString($3.place) + " F" + intToString(nextFreeRegF) + " " + intToString($3.offset));
+					codeBuf.emit("READF F" + intToString(nextFreeRegF));
+					codeBuf.emit("CITOF F" + intToString(nextFreeRegF+1) + " I1");
+					codeBuf.emit("STORF F" + intToString(nextFreeRegF) + " F" + intToString(nextFreeRegF + 1) + " " + intToString($3.offset));
 				}
 				else if ($3.type == cmm_int || $3.type == cmm_volatile) {
-					codeBuf.emit("READI I" + intToString($3.place));
-					codeBuf.emit("STORI I" + intToString($3.place) + " I1" + " " + intToString($3.offset));
+					codeBuf.emit("READI I" + intToString(nextFreeRegI));
+                    if ($3.dereferencedPtr == true) {
+                        codeBuf.emit("STORI I" + intToString(nextFreeRegI) + " I" + intToString($3.offsetReg) + " 0");
+                    }
+                    else {
+                        codeBuf.emit("STORI I" + intToString(nextFreeRegI) + " I1" + " " + intToString($3.offset));
+                    }
 				}
 				else {
 					// id does not exist
-					semanticError("variable '" + $1.name + "' can not be written from IO");
+					semanticError("variable can not be written from IO");
 				}
 			}
 ;

@@ -31,12 +31,15 @@ class Node {
         types type; // type of param, if applicable
         int offset; // offset from I1, this is where the variable is located in the stack if applicable
         int offsetReg; // for dereferenced pointers, this register contains the offset to the LVAL
+        bool dereferencedPtr = false;
         int quad; // quad for use in markers
         int place; // register number allocated for this nodes intermediate value.
         vector<int> nextList;
         vector<int> falseList;
         vector<int> trueList;
 
+        // remember declaration params
+        vector<string> argDefinitions;
         // remember function args to check if call is good
         vector<types> argTypes;
         // List of parameters register numbers
@@ -78,8 +81,9 @@ static CodeBuffer codeBuf;
 static int nextFreeRegI = 3; // next empty int reg
 static int nextFreeRegF = 0; // next empty float reg
 
-static int stackPointer = 0;
-static int framePointer = 0;
+static int currentStackOffset = 0; //TODO: zero this when entering a function
+static types functionReturnType;
+
 #define YYSTYPE Node
 extern FILE *yyin;
 #endif
