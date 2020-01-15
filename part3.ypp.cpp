@@ -247,17 +247,78 @@ ASSN:
 
 // ternary assignment
 ASSN_C:
-                LVAL assign_tok BEXP '?' EXP ':' EXP ';' {
+                LVAL assign_tok BEXP '?' M EXP N ':' M EXP ';' {
                     // check if types are compatible
-                    string typeChar[] = {"I", "F", "I", "", "I"}; // used to convert the "types" enum to string for easier use
+                    string typeChar[] = {"I", "F", "P", "", "I"}; // used to convert the "types" enum to string for easier use
                     string Ltype = typeChar[$1.type];
-                    string Rtype = typeChar[$3.type];
-                    if (Ltype == "" || Rtype == "") {
+                    string Rtype1 = typeChar[$6.type];
+                    string Rtype2 = typeChar[$10.type];
+                    if (Ltype == "" || Rtype1 == "" || Rtype2 == "") {
                         semanticError("Can't assign void type");
                     }
-                    if (Ltype != Rtype || ($1.type == cmm_pint && $3.type != cmm_pint) || ($1.type != cmm_pint && $3.type == cmm_pint)) {
+                    if (Ltype != Rtype1 || Ltype != Rtype2) {
                         semanticError ("Bad assignment, type mismatch");
                     }
+                    // change type char from P to I for ease of programming
+                    if (Ltype == "P") {
+                        Ltype = "I";
+                        Rtype1 = "I";
+                        Rtype2 = "I";
+                    }
+                    // patch BEXP lists
+                    codeBuf.backPatch($3.trueList, $5.quad);
+                    codeBuf.backPatch($3.falseList, $9.quad);
+
+                    // start with assignment of second EXP
+                    if ($1.type == cmm_float) {
+                        codeBuf.emit("CITOF F" + intToString(nextFreeRegF) + " I1");
+                        codeBuf.emit("STORF" + " F" + intToString($10.place) + " F" intToString(nextFreeRegF) + " " + intToString($1.offset));
+                    }
+                    else {
+                        // if the exp is volatile, we need to read it first
+                        if ($10.type == cmm_volatile) {
+                            codeBuf.emit("LOADI I" + intToString(nextFreeRegI) + " I1 " + intToString($10.offset));
+                            $10.place = nextFreeRegI;
+                            ++nextFreeRegI;
+                        }
+                        if ($1.dereferencedPtr == true) {
+                            codeBuf.emit("STORI" + " I" + intToString($10.place) + " I" + intToString($1.offsetReg) + " 0");
+                        }
+                        else {
+                            codeBuf.emit("STORI" + " I" + intToString($10.place) + " I1 " + intToString($1.offset));
+                        }
+                    }
+                    
+                    // done assignment, need "goto next"
+                    $$.nextlist.push_back(codeBuf.nextQuad());
+                    codeBuf.emit("UJUMP ");
+                    
+                    // done with assignment code for EXP2, we can patch to make EXP1 code jump here
+                    codeBuf.backPatch($7.nextlist, codeBuf.nextQuad());
+
+                    // start assignment code for first EXP
+                    if ($1.type == cmm_float) {
+                        codeBuf.emit("CITOF F" + intToString(nextFreeRegF) + " I1");
+                        codeBuf.emit("STORF" + " F" + intToString($6.place) + " F" intToString(nextFreeRegF) + " " + intToString($1.offset));
+                    }
+                    else {
+                        // if the exp is volatile, we need to read it first
+                        if ($6.type == cmm_volatile) {
+                            c1deBuf.emit("LOADI I" + intToString(nextFreeRegI) + " I0 " + intToString($6.offset));
+                            $6.place = nextFreeRegI;
+                            ++nextFreeRegI;
+                        }
+                        if ($1.dereferencedPtr == true) {
+                            cod1Buf.emit("STORI" + " I" + intToString($6.place) + " I" + intToString($1.offsetReg) + " 0");
+                        }
+                        else {
+                            codeBuf.emit("STORI" + " I" + intToString($6.place) + " I1 " + intToString($1.offset));
+                        }
+                    }
+
+                    // done assignment of EXP1, TODO: make sure to backpatch ASSN_C nextlist
+
+
                 }
 ;
 
