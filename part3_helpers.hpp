@@ -30,6 +30,7 @@ class Node {
         string name; // id of node if applicable 
         types type; // type of param, if applicable
         int offset; // offset from I1, this is where the variable is located in the stack if applicable
+        int offsetReg; // for dereferenced pointers, this register contains the offset to the LVAL
         int quad; // quad for use in markers
         int place; // register number allocated for this nodes intermediate value.
         vector<int> nextList;

@@ -216,19 +216,22 @@ ASSN:
                     }
 
                     if ($1.type == cmm_float) {
-                        codeBuf.emit("COPYF F" + intToString($1.place) + " F" + intToString($3.place));
                         codeBuf.emit("CITOF F" + intToString(nextFreeRegF) + " I1");
-                        codeBuf.emit("STORF" + " F" + intToString($1.place) + " F" intToString(nextFreeRegF) + " F" + intToString($1.offset));
+                        codeBuf.emit("STORF" + " F" + intToString($3.place) + " F" intToString(nextFreeRegF) + " " + intToString($1.offset));
                     }
                     else {
                         // if the exp is volatile, we need to read it first
                         if ($3.type == cmm_volatile) {
-                            codeBuf.emit("LOADI I" + intToString($1.place) + " I1 " + intToString($3.offset));
+                            codeBuf.emit("LOADI I" + intToString(nextFreeRegI) + " I1 " + intToString($3.offset));
+                            $3.place = nextFreeRegI;
+                            ++nextFreeRegI;
+                        }
+                        if ($1.dereferencedPtr == true) {
+                            codeBuf.emit("STORI" + " I" + intToString($3.place) + " I" + intToString($1.offsetReg) + " 0");
                         }
                         else {
-                            codeBuf.emit("COPYI I" + intToString($1.place) + " I" + intToString($3.place));
+                            codeBuf.emit("STORI" + " I" + intToString($3.place) + " I1 " + intToString($1.offset));
                         }
-                        codeBuf.emit("STORI" + " I" + intToString($1.place) + " I1 I" + intToString($1.offset));
                     }
 
                 }
@@ -260,17 +263,6 @@ LVAL:
 					}
 					$$.type = idSymbol.type;
 					$$.offset = idSymbol.offset;
-					if ($$.type == cmm_float) {
-						codeBuf.emit("CITOF F" + intToString(nextFreeRegF) + " I1");
-						codeBuf.emit("LOADF F" + intToString(nextFreeRegF) + " F" + intToString(nextFreeRegF) + " " intToString(idSymbol.offset));
-						$$.place = nextFreeRegF;
-						++nextFreeRegF;
-					}
-					else { // int/volatile/pint
-						codeBuf.emit("LOADI I" + intToString(nextFreeRegI) + " I1 " + intToString(idSymbol.offset));
-						$$.place = nextFreeRegI;
-						++nextFreeRegI;
-					}
 				}
             |
                 '@'EXP{
@@ -278,10 +270,11 @@ LVAL:
 					if ($2.type != cmm_pint) {
 						semanticError("Trying to dereference a non-pointer variable");
 					}
-					codeBuf.emit("LOADI I" + intToString(nextFreeRegI)) + " I1 I" + intToString($2.place) ); // TODO: I1 or I2 here?
-					$$.place = nextFreeRegI;
+					codeBuf.emit("COPYI I" + intToString(nextFreeRegI)) + " I" + intToString($2.place));
+                    $$.offsetReg = nextFreeRegI;
 					++nextFreeRegI;
-					$$.type = cmm_int;
+					$$.type = cmm_volatile;
+                    $$.dereferencedPtr = true;
 				}
 ;
 
