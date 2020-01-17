@@ -32,6 +32,43 @@ void CodeBuffer::merge(vector<int>& src1, vector<int>& src2, vector<int>& dst) {
 	dst = tmp;
 }
 
+void CodeBuffer::addHeader() {
+	string unimplementedHeader = "<unimplemented>";
+	string implementedHeader = "<implemented>";
+	map<string, FunctionInformation>:: iterator itr;
+	// create headed line for the implemented and unimplemented functions
+	itr = implementedFunctions.begin();
+	while (itr != implementedFunctions.end()) {
+		FunctionInformation currentFunc = itr->second;
+		implementedHeader += " " + itr->first + "," + intToString(currentFunc.locationInFile);
+		++itr;
+	}
+	itr = declaredFunctions.begin();
+	while (itr != declaredFunctions.end()) {
+		FunctionInformation currentFunc = itr->second;
+		if (currentFunc.locationInFile == -1) {
+			// function is unimplemented
+			unimplementedHeader += " " + itr->first;
+			for (int i=0; i < currentFunc.callLocations.size(); ++i) {
+				unimplementedHeader += "," + intToString(currentFunc.callLocations[i]);
+			}
+		}
+		++itr;
+	}
+	code.insert(code.begin(), "</header>");
+	code.insert(code.begin(), implementedHeader);
+	code.insert(code.begin(), unimplementedHeader);
+	code.insert(code.begin(), "<header>");
+}
+
+string CodeBuffer::getCodeString() {
+	string out = "";
+	for (int i=0; i < code.size(); ++i) {
+		out += code[i] + "\n";
+	}
+	return out;
+}
+
 Symbol::Symbol(int offset, types type): offset(offset), type(type) {}
 
 void SymbolTable::enterBlock() {

@@ -21,6 +21,8 @@ class CodeBuffer {
         void backPatch(vector<int>& list, int quad);
         int nextQuad();
 		void merge(vector<int>& src1, vector<int>& src2, vector<int>& dst);
+        void addHeader();
+        string getCodeString();
     private:
         vector<string> code; // TODO: should we append directly to the file?
 };

@@ -6,9 +6,11 @@
 extern int yylex();
 extern char* yytext;
 extern int yylineno;
+extern FILE *yyin;
 
 void yyerror(const char*);
 void semanticError(string msg);
+void operationalError(string msg);
 
 %}
 
@@ -957,8 +959,34 @@ N:
 ;
 %%
 
-void yyerror(const char* msg)
-{
+int main(int argc, char* argv[]){
+	// check if arguments are good
+	if (argc != 2)
+		operationalError("bad arguments");
+	yyin = fopen(argv[1], "r");
+	if (yyin == NULL)
+		operationalError("failed reading the cmm file");
+	if (has_suffix(argv[1], ".cmm") == false)
+		operationalError("input file must be a .cmm file");
+	
+	yyparse();
+	
+    codeBuf.addHeader();
+
+	ofstream output;
+	string fileName = argv[1];
+	string outfileName = fileName.substr(0, fileName.size() - 3) + "rsk";  // TODO: make sure this replaces .cmm with .rsk
+
+	output.open(outfileName.c_str());
+	output << codeBuf.getCodeString();
+	output.close();
+	
+	yylex_destroy(); // TODO: is this needed?
+	return 0;
+	
+}
+
+void yyerror(const char* msg) {
     cerr << "Syntax error: " << yytext << " in line number " << yylineno << endl;
     exit(2);
 }
@@ -966,4 +994,9 @@ void yyerror(const char* msg)
 void semanticError(string msg) {
     cerr << "Semantic error: " << msg << " in line number " << yylineno << endl;
     exit(3);
+}
+
+void operationalError(string msg) {
+    cerr << "Operational error: " << msg << endl;
+    exit(9);
 }
