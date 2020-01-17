@@ -15,7 +15,7 @@ void CodeBuffer::emit(string code) {
 }
 
 void CodeBuffer::backPatch(vector<int>& list, int quad) {
-    for( int i=0; i< list.size; ++i) {
+    for( int i=0; i< list.size(); ++i) {
         int codeLineToChange = list[i];
         this->code[codeLineToChange] += " " + intToString(quad);
     }
@@ -95,7 +95,7 @@ void SymbolTable::clear() {
 }
 
 Symbol SymbolTable::getVar(string varName) {
-	list<map <string, Symbol>>::reverse_iterator rit = symTable.rbegin();
+	list<map <string, Symbol> >::reverse_iterator rit = symTable.rbegin();
 	for (; rit != symTable.rend(); ++rit) {
 		map <string, Symbol> & curMap = (*rit);
 		map <string, Symbol>::iterator itr = curMap.find(varName);

@@ -1,14 +1,14 @@
 # Makefile for part2
 
-part2: part2.tab.c part2.tab.h part2-lex.c part2-lex.h part2_helpers.c part2_helpers.h
-	gcc -o $@ part2.tab.c part2-lex.c part2_helpers.c
+part3: part3.tab.cpp part3.tab.hpp part3-lex.c part3-lex.h part3_helpers.cpp part3_helpers.hpp
+	g++ -o $@ part3.tab.cpp part3-lex.c part3_helpers.cpp
 
-part2-lex.c part2-lex.h: part2.lex part2_helpers.h part2.tab.h
-	flex part2.lex
+part3-lex.c part3-lex.h: part3.lex part3_helpers.hpp part3.tab.hpp
+	flex part3.lex
 
-part2.tab.c part2.tab.h: part2.y part2_helpers.h
-	bison -d part2.y
+part3.tab.cpp part3.tab.hpp: part3.ypp part3_helpers.hpp
+	bison -d part3.ypp
 
 .PHONY: clean
 clean:
-	rm -f part2 part2-lex.c part2-lex.h *.o part2.tab.c part2.tab.h
+	rm -f part3 part3-lex.c part3-lex.h *.o part3.tab.cpp part3.tab.hpp

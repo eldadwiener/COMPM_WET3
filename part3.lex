@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "part3_helpers.hpp"
-#include "part3.tab.h"
+#include "part3.tab.hpp"
 
 void LexErr();
 void printstr();

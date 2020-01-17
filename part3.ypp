@@ -1,16 +1,19 @@
 %{
-#include <stdlib.h>
-#include <stdio.h>
+#include <iostream>
+#include <fstream>
 #include "part3_helpers.hpp"
 
 extern int yylex();
 extern char* yytext;
 extern int yylineno;
 extern FILE *yyin;
+extern void yylex_destroy();
 
 void yyerror(const char*);
 void semanticError(string msg);
 void operationalError(string msg);
+
+using namespace std;
 
 %}
 
@@ -33,7 +36,6 @@ void operationalError(string msg);
 %left '(' '{'
 %left ')' '}'
 %left '?' ',' ':' ';' '&' '@'
-
 %%
 
 /* define the dictation of cmm */
@@ -43,7 +45,7 @@ PROGRAM:        FDEFS {
 ;
 /* representation of function definitions */
 FDEFS:
-                FDEFS M FUNC_API { funcStartingLine = codeBuf.nextQuad() } BLK {
+                FDEFS M FUNC_API { funcStartingLine = codeBuf.nextQuad(); } BLK {
 					//check for already implemented function
 					if (implementedFunctions.find($3.name) != implementedFunctions.end()) {
 						semanticError("function '" + $3.name + "' already implemented");
@@ -58,7 +60,7 @@ FDEFS:
 					//check if the function already declared
 					std::map<string, FunctionInformation>::iterator itr = declaredFunctions.find($3.name);
 					if (itr != declaredFunctions.end()) {
-						FunctionInformation declaredFuncInfo = itr->second();
+						FunctionInformation declaredFuncInfo = itr->second;
 						//check for args names and types
 						if ((funcInfo.argTypes != declaredFuncInfo.argTypes) || //args type check
 							(funcInfo.argNames != declaredFuncInfo.argNames) || //args name check 
@@ -100,7 +102,7 @@ FDEFS:
 					//check if the function already implemented
 					std::map<string, FunctionInformation>::iterator itr = implementedFunctions.find($2.name);
 					if (itr != implementedFunctions.end()) {
-						FunctionInformation implemetedFuncInfo = itr->second();
+						FunctionInformation implemetedFuncInfo = itr->second;
 						//check for args names and types
 						if ((funcInfo.argTypes != implemetedFuncInfo.argTypes) || //args type check
 							(funcInfo.argNames != implemetedFuncInfo.argNames) || //args name check 
@@ -330,10 +332,10 @@ WRITE:
                             }
                             else { // TODO: check that all these work
                                 // from lex, we know this char must be one of: n, \, "
-                                if (str[i] == "n") {
+                                if (str[i] == 'n') {
                                     codeBuf.emit("PRNTC \n");
                                 }
-                                else if (str[i] == "\\") {
+                                else if (str[i] == '\\') {
                                     codeBuf.emit("PRNTC \\");
                                 }
                                 else {
@@ -383,7 +385,7 @@ ASSN:
 
                     if ($1.type == cmm_float) {
                         codeBuf.emit("CITOF F" + intToString(nextFreeRegF) + " I1");
-                        codeBuf.emit("STORF" + " F" + intToString($3.place) + " F" intToString(nextFreeRegF) + " " + intToString($1.offset));
+                        codeBuf.emit("STORF F" + intToString($3.place) + " F" + intToString(nextFreeRegF) + " " + intToString($1.offset));
                     }
                     else {
                         // if the exp is volatile, we need to read it first
@@ -393,10 +395,10 @@ ASSN:
                             ++nextFreeRegI;
                         }
                         if ($1.dereferencedPtr == true) {
-                            codeBuf.emit("STORI" + " I" + intToString($3.place) + " I" + intToString($1.offsetReg) + " 0");
+                            codeBuf.emit("STORI I" + intToString($3.place) + " I" + intToString($1.offsetReg) + " 0");
                         }
                         else {
-                            codeBuf.emit("STORI" + " I" + intToString($3.place) + " I1 " + intToString($1.offset));
+                            codeBuf.emit("STORI I" + intToString($3.place) + " I1 " + intToString($1.offset));
                         }
                     }
 
@@ -430,7 +432,7 @@ ASSN_C:
                     // start with assignment of second EXP
                     if ($1.type == cmm_float) {
                         codeBuf.emit("CITOF F" + intToString(nextFreeRegF) + " I1");
-                        codeBuf.emit("STORF" + " F" + intToString($10.place) + " F" intToString(nextFreeRegF) + " " + intToString($1.offset));
+                        codeBuf.emit("STORF F" + intToString($10.place) + " F" + intToString(nextFreeRegF) + " " + intToString($1.offset));
                     }
                     else {
                         // if the exp is volatile, we need to read it first
@@ -440,37 +442,37 @@ ASSN_C:
                             ++nextFreeRegI;
                         }
                         if ($1.dereferencedPtr == true) {
-                            codeBuf.emit("STORI" + " I" + intToString($10.place) + " I" + intToString($1.offsetReg) + " 0");
+                            codeBuf.emit("STORI I" + intToString($10.place) + " I" + intToString($1.offsetReg) + " 0");
                         }
                         else {
-                            codeBuf.emit("STORI" + " I" + intToString($10.place) + " I1 " + intToString($1.offset));
+                            codeBuf.emit("STORI I" + intToString($10.place) + " I1 " + intToString($1.offset));
                         }
                     }
                     
                     // done assignment, need "goto next"
-                    $$.nextlist.push_back(codeBuf.nextQuad());
+                    $$.nextList.push_back(codeBuf.nextQuad());
                     codeBuf.emit("UJUMP ");
                     
                     // done with assignment code for EXP2, we can patch to make EXP1 code jump here
-                    codeBuf.backPatch($7.nextlist, codeBuf.nextQuad());
+                    codeBuf.backPatch($7.nextList, codeBuf.nextQuad());
 
                     // start assignment code for first EXP
                     if ($1.type == cmm_float) {
                         codeBuf.emit("CITOF F" + intToString(nextFreeRegF) + " I1");
-                        codeBuf.emit("STORF" + " F" + intToString($6.place) + " F" intToString(nextFreeRegF) + " " + intToString($1.offset));
+                        codeBuf.emit("STORF F" + intToString($6.place) + " F" + intToString(nextFreeRegF) + " " + intToString($1.offset));
                     }
                     else {
                         // if the exp is volatile, we need to read it first
                         if ($6.type == cmm_volatile) {
-                            c1deBuf.emit("LOADI I" + intToString(nextFreeRegI) + " I0 " + intToString($6.offset));
+                            codeBuf.emit("LOADI I" + intToString(nextFreeRegI) + " I0 " + intToString($6.offset));
                             $6.place = nextFreeRegI;
                             ++nextFreeRegI;
                         }
                         if ($1.dereferencedPtr == true) {
-                            cod1Buf.emit("STORI" + " I" + intToString($6.place) + " I" + intToString($1.offsetReg) + " 0");
+                            codeBuf.emit("STORI I" + intToString($6.place) + " I" + intToString($1.offsetReg) + " 0");
                         }
                         else {
-                            codeBuf.emit("STORI" + " I" + intToString($6.place) + " I1 " + intToString($1.offset));
+                            codeBuf.emit("STORI I" + intToString($6.place) + " I1 " + intToString($1.offset));
                         }
                     }
                 }
@@ -478,7 +480,7 @@ ASSN_C:
 
 LVAL:
                 id_tok{
-					Symbol &idSymbol = symTable.getVar($1.name);
+					Symbol idSymbol = symTable.getVar($1.name);
 					// make sure the id exists
 					if (idSymbol.offset == -1) {
 						// id does not exist
@@ -486,6 +488,7 @@ LVAL:
 					}
 					$$.type = idSymbol.type;
 					$$.offset = idSymbol.offset;
+                    $$.dereferencedPtr = false;
 				}
             |
                 '@'EXP{
@@ -493,7 +496,7 @@ LVAL:
 					if ($2.type != cmm_pint) {
 						semanticError("Trying to dereference a non-pointer variable");
 					}
-					codeBuf.emit("COPYI I" + intToString(nextFreeRegI)) + " I" + intToString($2.place));
+					codeBuf.emit("COPYI I" + intToString(nextFreeRegI) + " I" + intToString($2.place));
                     $$.offsetReg = nextFreeRegI;
 					++nextFreeRegI;
 					$$.type = cmm_volatile;
@@ -570,14 +573,14 @@ BEXP:
 
                     // perform the check, and do the jumps
                     if (type == "I") {
-                        $$.trueList.push_back(codeBuf.nextquad() + 1);
-                        $$.falseList.push_back(codeBuf.nextquad() + 2);
+                        $$.trueList.push_back(codeBuf.nextQuad() + 1);
+                        $$.falseList.push_back(codeBuf.nextQuad() + 2);
                         $$.place = nextFreeRegI;
                         ++nextFreeRegI;
                     }
                     else {
-                        $$.trueList.push_back(codeBuf.nextquad() + 2);
-                        $$.falseList.push_back(codeBuf.nextquad() + 3);
+                        $$.trueList.push_back(codeBuf.nextQuad() + 2);
+                        $$.falseList.push_back(codeBuf.nextQuad() + 3);
                         $$.place = nextFreeRegF;
                         ++nextFreeRegF;
                     }
@@ -639,7 +642,7 @@ EXP:
                     // check if add or sub
                     string op;
                     if ($2.name == "+") {
-                        op = "ADD2"
+                        op = "ADD2";
                     }
                     else {
                         op = "SUBT";
@@ -685,7 +688,7 @@ EXP:
                     // check if mult or div
                     string op;
                     if ($2.name == "*") {
-                        op = "MULT"
+                        op = "MULT";
                     }
                     else {
                         op = "DIVD";
@@ -756,7 +759,7 @@ EXP:
                 }
             |
                 id_tok {
-                    Symbol &idSymbol = symTable.getVar($1.name);
+                    Symbol idSymbol = symTable.getVar($1.name);
                     // make sure the id exists
                     if (idSymbol.offset == -1) {
                         // id does not exist
@@ -766,7 +769,7 @@ EXP:
                     $$.offset = idSymbol.offset;
                     if ($$.type == cmm_float) {
                         codeBuf.emit("CITOF F" + intToString(nextFreeRegF) + " I1");
-                        codeBuf.emit("LOADF F" + intToString(nextFreeRegF) + " F" + intToString(nextFreeRegF) + " " intToString(idSymbol.offset));
+                        codeBuf.emit("LOADF F" + intToString(nextFreeRegF) + " F" + intToString(nextFreeRegF) + " " + intToString(idSymbol.offset));
                         $$.place = nextFreeRegF;
                         ++nextFreeRegF;
                     }
@@ -794,7 +797,7 @@ EXP:
                     if ( $2.type != cmm_pint ) {
                         semanticError("Trying to dereference a non-pointer variable");
                     }
-                    codeBuf.emit("LOADI I" + intToString(nextFreeRegI)) + " 0 I" + intToString($2.place) );
+                    codeBuf.emit("LOADI I" + intToString(nextFreeRegI) + " 0 I" + intToString($2.place) );
                     $$.place = nextFreeRegI;
                     ++nextFreeRegI;
                     $$.type = cmm_int;
@@ -881,8 +884,8 @@ CALL:
                     codeBuf.emit("COPYI I1 I2");
 
                     // finally we can call the poor fella, good luck mate
-                    if ( !implented ) { 
-                        func.callLocations.push_back(codeBuf.nextquad());
+                    if ( !implemented ) { 
+                        func.callLocations.push_back(codeBuf.nextQuad());
                     }
                     codeBuf.emit("JLINK " + intToString(func.locationInFile));
 
@@ -940,8 +943,8 @@ CALL_ARGLIST:
                 }
             |
                 EXP  {
-					$$.argTypes.push_front($1.type); /* TODO: do we need to clear $1 */
-                    $$.argRegs.push_front($1.place); 
+					$$.argTypes.push_back($1.type); /* TODO: do we need to clear $1 */
+                    $$.argRegs.push_back($1.place); 
                  }
 ;
 
@@ -953,7 +956,7 @@ M:
 
 N:
 				/*epsilon*/ {
-				$$.nextList = codeBuf.nextQuad();
+				$$.nextList.push_back(codeBuf.nextQuad());
 				codeBuf.emit("UJUMP ");
 				}
 ;
@@ -961,20 +964,24 @@ N:
 
 int main(int argc, char* argv[]){
 	// check if arguments are good
-	if (argc != 2)
+	if (argc != 2) {
 		operationalError("bad arguments");
+    }
 	yyin = fopen(argv[1], "r");
-	if (yyin == NULL)
+	if (yyin == NULL) {
 		operationalError("failed reading the cmm file");
-	if (has_suffix(argv[1], ".cmm") == false)
+    }
+    // make sure the file ends with .cmm
+	string fileName = argv[1];
+    if (fileName.size() < 4 || fileName.substr(fileName.size() - 4) != ".cmm") {
 		operationalError("input file must be a .cmm file");
+    }
 	
 	yyparse();
 	
     codeBuf.addHeader();
 
 	ofstream output;
-	string fileName = argv[1];
 	string outfileName = fileName.substr(0, fileName.size() - 3) + "rsk";  // TODO: make sure this replaces .cmm with .rsk
 
 	output.open(outfileName.c_str());
