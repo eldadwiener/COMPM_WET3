@@ -59,7 +59,7 @@ class SymbolTable {
         void leaveBlock(); // remove the deepest level
         bool putVar(string varName, Symbol var);
         Symbol getVar(string varName);
-
+		void clear();
     private:
         list<map<string, Symbol>> symTable;
 
@@ -68,6 +68,7 @@ class SymbolTable {
 class FunctionInformation {
     public:
         vector<types> argTypes;
+		vector<string> argNames;
         types returnType;
         int locationInFile;
         vector<int> callLocations;
@@ -80,7 +81,7 @@ static CodeBuffer codeBuf;
 // TODO: how many registers should we save for our use?
 static int nextFreeRegI = 3; // next empty int reg
 static int nextFreeRegF = 0; // next empty float reg
-
+static int funcStartingLine; // save the first line off the func implementation 
 static int currentStackOffset = 0; //TODO: zero this when entering a function
 static types functionReturnType;
 

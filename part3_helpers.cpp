@@ -53,6 +53,10 @@ bool SymbolTable::putVar(string varName, Symbol var) {
 	return true;
 }
 
+void SymbolTable::clear() {
+	symTable.clear();
+}
+
 Symbol SymbolTable::getVar(string varName) {
 	list<map <string, Symbol>>::reverse_iterator rit = symTable.rbegin();
 	for (; rit != symTable.rend(); ++rit) {

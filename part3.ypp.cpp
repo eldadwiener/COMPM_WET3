@@ -36,57 +36,147 @@ void semanticError(string msg);
 
 /* define the dictation of cmm */
 PROGRAM:        FDEFS {
-                        }
+					codeBuf.emit("HALT");
+				}
 ;
 /* representation of function definitions */
 FDEFS:
-                FDEFS FUNC_API BLK{
-                                    $$ = makeNode("FDEFS", NULL, $1);
-                                    concatList($1, $2);
-                                    concatList($1, $3);
-                                    }
+                FDEFS M FUNC_API { funcStartingLine = codeBuf.nextQuad() } BLK {
+					//check for already implemented function
+					if (implementedFunctions.find($3.name) != implementedFunctions.end()) {
+						semanticError("function '" + $3.name + "' already implemented");
+					}
+					//create new FunctionInformation according to the FUNC_API info
+					FunctionInformation funcInfo;
+					funcInfo.argTypes = $3.argTypes;
+					funcInfo.argNames = $3.argDefinitions;
+					funcInfo.returnType = $3.type;
+					funcInfo.locationInFile = funcStartingLine;
+
+					//check if the function already declared
+					std::map<string, FunctionInformation>::iterator itr = declaredFunctions.find($3.name);
+					if (itr != declaredFunctions.end()) {
+						FunctionInformation declaredFuncInfo = itr->second();
+						//check for args names and types
+						if ((funcInfo.argTypes != declaredFuncInfo.argTypes) || //args type check
+							(funcInfo.argNames != declaredFuncInfo.argNames) || //args name check 
+							(funcInfo.returnType != declaredFuncInfo.returnType)) { // return value type check
+							semanticError("function '" + $3.name + "' already declared with another arguments");
+						}
+						// the declaration and ipmlementation are equals
+						declaredFuncInfo.locationInFile = funcInfo.locationInFile;
+						//do backPatch for all of the func calls until now
+						codeBuf.backPatch(declaredFuncInfo.callLocations, $2.quad);
+					}
+					//insert the func-info to the implemeted-functions data base
+					implementedFunctions.insert(std::pair<string, FunctionInformation>($3.name, funcInfo));
+					//clear the symbol table
+					symTable.clear();
+
+					//do backPatch
+					codeBuf.backPatch($5.nextList, codeBuf.nextQuad());
+
+					codeBuf.emit("COPYI I2 I1");
+					codeBuf.emit("RETRN");
+                }
 
             |
                 FDEFS FUNC_API ';' {
-                                    $$ = makeNode("FDEFS", NULL, $1);
-                                    concatList($1, $2);
-                                    concatList($1, $3);
-                                    }
+					//TODO: what about main declaration?
+					//check for already declared function
+					if (declaredFunctions.find($2.name) != declaredFunctions.end()) {
+						semanticError("function '" + $2.name + "' already declared");
+					}
+					
+					//create new FunctionInformation according to the FUNC_API info
+					FunctionInformation funcInfo;
+					funcInfo.argTypes = $2.argTypes;
+					funcInfo.argNames = $2.argDefinitions;
+					funcInfo.returnType = $2.type;
+					funcInfo.locationInFile = -1;
+
+					//check if the function already implemented
+					std::map<string, FunctionInformation>::iterator itr = implementedFunctions.find($2.name);
+					if (itr != implementedFunctions.end()) {
+						FunctionInformation implemetedFuncInfo = itr->second();
+						//check for args names and types
+						if ((funcInfo.argTypes != implemetedFuncInfo.argTypes) || //args type check
+							(funcInfo.argNames != implemetedFuncInfo.argNames) || //args name check 
+							(funcInfo.returnType != implemetedFuncInfo.returnType)) { // return value type check
+							semanticError("bad declaration for function named: '" + $2.name + "'");
+						}
+						// the declaration and ipmlementation are equals
+						funcInfo.locationInFile = implemetedFuncInfo.locationInFile;
+					}
+					//insert the func-info to the declared-functions data base
+					declaredFunctions.insert(std::pair<string, FunctionInformation>($2.name, funcInfo));
+					//clear the symbol table
+					symTable.clear();
+				}
             |
-               /* epsilon */       { $$ = makeNode("FDEFS", NULL, makeNode("EPSILON", NULL, NULL)); }
+               /* epsilon */       {  }
 ;
 
 // a single function declaration
 FUNC_API:
                 TYPE id_tok '(' FUNC_ARGS ')' {
-                                                $$ = makeNode("FUNC_API", NULL, $1);
-                                                concatList($1, $2);
-                                                concatList($1, $3);
-                                                concatList($1, $4);
-                                                concatList($1, $5);
-                                                }
+					//save the function's: name, type and arguments (name and type)
+					$$.type = $1.type;
+					$$.name = $2.name;
+					$$.argDefinitions = $4.argDefinitions;
+					$$.argTypes = $4.argTypes;
+
+					//set new symbol table
+					symTable.clear();
+					symTable.enterBlock();
+
+					//insert the argumets into the symbols-table
+					int argsOffset = -8;
+
+					for (int i = 0; i < $4.argDefinitions.size(); ++i) {
+						Symbol arg(argsOffset, $4.argTypes[i]);
+						symTable.putVar($4.argDefinitions[i], arg);
+					}
+                }
 ;
 
 // function arguments (0 or more)
 FUNC_ARGS:
-                FUNC_ARGLIST { $$ = makeNode("FUNC_ARGS", NULL, $1); }
+                FUNC_ARGLIST { 
+					$$.argDefinitions = $1.argDefinitions;
+					$$.argTypes = $1.argTypes; 
+				}
             |
-               /* epsilon */       { $$ = makeNode("FUNC_ARGS", NULL, makeNode("EPSILON", NULL, NULL)); }
+               /* epsilon */ 
+				{
+					$$.argDefinitions.clear();
+					$$.argTypes.clear();
+				}
 ;
 
 FUNC_ARGLIST:
                 FUNC_ARGLIST ',' DCL {
-                                    $$ = makeNode("FUNC_ARGLIST", NULL, $1);
-                                    concatList($1, $2);
-                                    concatList($1, $3);
-                                    }
+					$$.argDefinitions = $1.argDefinitions;
+					$$.argTypes = $1.argTypes;
+					for (int i = 0; i < $3.argDefinitions.size(); ++i) {
+						//insert var to vars vector and update its type
+						$$.argDefinitions.push_back($3.argDefinitions[i]);
+						$$.argTypes.push_back($3.type);
+					}
+                 }
             |
-                DCL { $$ = makeNode("FUNC_ARGLIST", NULL, $1); }
+                DCL { 
+					for (int i = 0; i < $1.argDefinitions.size(); ++i) {
+						//insert var to vars vector and update its type
+						$$.argDefinitions.push_back($1.argDefinitions[i]);
+						$$.argTypes.push_back($1.type);
+					}
+				}
 ;
 
 // represents a statements block
 BLK:            '{' {symTable.enterBlock();} STLIST {symTable.leaveBlock();}'}' {
-                    $$.nextList = $2.nextList; //TODO: is this $2?
+                    $$.nextList = $3.nextList;
                 }
 ;
 
@@ -381,10 +471,6 @@ ASSN_C:
                             codeBuf.emit("STORI" + " I" + intToString($6.place) + " I1 " + intToString($1.offset));
                         }
                     }
-
-                    // done assignment of EXP1, TODO: make sure to backpatch ASSN_C nextlist
-
-
                 }
 ;
 
