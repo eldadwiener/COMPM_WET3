@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "part3_helpers.hpp"
 #include <sstream>
+#include <iostream>
 
 string intToString(int num) {
   std::ostringstream stream;
@@ -11,13 +12,14 @@ string intToString(int num) {
 }
 
 void CodeBuffer::emit(string code) {
+	std::cout << nextQuad() << ")" << code << endl; // TODO: remove this print
     this->code.push_back(code);
 }
 
 void CodeBuffer::backPatch(vector<int>& list, int quad) {
     for( int i=0; i< list.size(); ++i) {
         int codeLineToChange = list[i];
-        this->code[codeLineToChange] += " " + intToString(quad);
+        code[codeLineToChange - 1] = code[codeLineToChange - 1] + " " + intToString(quad);
     }
 }
 
@@ -30,35 +32,6 @@ void CodeBuffer::merge(vector<int>& src1, vector<int>& src2, vector<int>& dst) {
 	tmp.insert(tmp.end(), src1.begin(), src1.end());
 	tmp.insert(tmp.end(), src2.begin(), src2.end());
 	dst = tmp;
-}
-
-void CodeBuffer::addHeader() {
-	string unimplementedHeader = "<unimplemented>";
-	string implementedHeader = "<implemented>";
-	map<string, FunctionInformation>:: iterator itr;
-	// create headed line for the implemented and unimplemented functions
-	itr = implementedFunctions.begin();
-	while (itr != implementedFunctions.end()) {
-		FunctionInformation currentFunc = itr->second;
-		implementedHeader += " " + itr->first + "," + intToString(currentFunc.locationInFile);
-		++itr;
-	}
-	itr = declaredFunctions.begin();
-	while (itr != declaredFunctions.end()) {
-		FunctionInformation currentFunc = itr->second;
-		if (currentFunc.locationInFile == -1) {
-			// function is unimplemented
-			unimplementedHeader += " " + itr->first;
-			for (int i=0; i < currentFunc.callLocations.size(); ++i) {
-				unimplementedHeader += "," + intToString(currentFunc.callLocations[i]);
-			}
-		}
-		++itr;
-	}
-	code.insert(code.begin(), "</header>");
-	code.insert(code.begin(), implementedHeader);
-	code.insert(code.begin(), unimplementedHeader);
-	code.insert(code.begin(), "<header>");
 }
 
 string CodeBuffer::getCodeString() {
@@ -81,7 +54,7 @@ void SymbolTable::leaveBlock() {
 }
 
 bool SymbolTable::putVar(string varName, Symbol var) {
-	map <string, Symbol > myMap = symTable.back();
+	map <string, Symbol > &myMap = symTable.back();
 	if (myMap.find(varName) != myMap.end()) //allready exist
 	{
 		return false;

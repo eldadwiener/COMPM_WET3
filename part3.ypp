@@ -45,7 +45,7 @@ PROGRAM:        FDEFS {
 ;
 /* representation of function definitions */
 FDEFS:
-                FDEFS M FUNC_API { funcStartingLine = codeBuf.nextQuad(); } BLK {
+                FDEFS M FUNC_API { funcStartingLine = codeBuf.nextQuad(); pendingFunc.second.locationInFile = funcStartingLine; } BLK {
 					//check for already implemented function
 					if (implementedFunctions.find($3.name) != implementedFunctions.end()) {
 						semanticError("function '" + $3.name + "' already implemented");
@@ -85,7 +85,8 @@ FDEFS:
                 }
 
             |
-                FDEFS FUNC_API ';' {
+                FDEFS M FUNC_API ';' {
+                    // the marker is here to fix shift/reduce conflicts with func definition
 					//TODO: what about main declaration?
 					//check for already declared function
 					if (declaredFunctions.find($2.name) != declaredFunctions.end()) {
@@ -124,7 +125,17 @@ FDEFS:
 // a single function declaration
 FUNC_API:
                 TYPE id_tok '(' FUNC_ARGS ')' {
+                    cout << "in func API for func: " << $2.name << endl;
 					//save the function's: name, type and arguments (name and type)
+                    FunctionInformation func;
+					func.argTypes = $4.argTypes;
+					func.argNames = $4.argDefinitions;
+					func.returnType = $1.type;
+					func.locationInFile = -1;
+
+                    pendingFunc.first = $2.name;
+                    pendingFunc.second = func;
+
 					$$.type = $1.type;
 					$$.name = $2.name;
 					$$.argDefinitions = $4.argDefinitions;
@@ -140,6 +151,7 @@ FUNC_API:
 					for (int i = 0; i < $4.argDefinitions.size(); ++i) {
 						Symbol arg(argsOffset, $4.argTypes[i]);
 						symTable.putVar($4.argDefinitions[i], arg);
+                        argsOffset -= 4;
 					}
                 }
 ;
@@ -312,37 +324,34 @@ RETURN:
 WRITE:
                 write_tok '(' EXP ')' ';'{
                     if ($3.type == cmm_float) {
-                        codeBuf.emit("PRNTF F" + $3.place);
+                        codeBuf.emit("PRNTF F" + intToString($3.place));
                     }
                     else {
-                        codeBuf.emit("PRNTI I" + $3.place);
+                        codeBuf.emit("PRNTI I" + intToString($3.place));
                     }
                 }
 			|
 				write_tok '(' str_tok ')' ';'{
                     string str = $3.name;
-                    bool seenBackslash = false;
                     for (int i = 0; i < str.size(); ++i) {
-                        if (str[i] == '\\') {
-                            seenBackslash = true;
+                        char toPrint;
+                        if (str[i] != '\\') {
+                            toPrint = str[i];
                         }
-                        else {
-                            if (!seenBackslash) {
-                                codeBuf.emit("PRNTC " + str[i]);
+                        else { // TODO: check that all these work
+                            // from lex, we know this char must be one of: n, \, "
+                            ++i;
+                            if (str[i] == 'n') {
+                                toPrint = '\n';
                             }
-                            else { // TODO: check that all these work
-                                // from lex, we know this char must be one of: n, \, "
-                                if (str[i] == 'n') {
-                                    codeBuf.emit("PRNTC \n");
-                                }
-                                else if (str[i] == '\\') {
-                                    codeBuf.emit("PRNTC \\");
-                                }
-                                else {
-                                    codeBuf.emit("PRNTC \"");
-                                }
+                            else if (str[i] == '\\') {
+                                toPrint = '\\';
+                            }
+                            else {
+                                toPrint = '\"';
                             }
                         }
+                        codeBuf.emit("PRNTC " + intToString( static_cast<int>(toPrint)) );
                     }
                 }
 ;
@@ -451,7 +460,7 @@ ASSN_C:
                     
                     // done assignment, need "goto next"
                     $$.nextList.push_back(codeBuf.nextQuad());
-                    codeBuf.emit("UJUMP ");
+                    codeBuf.emit("UJUMP");
                     
                     // done with assignment code for EXP2, we can patch to make EXP1 code jump here
                     codeBuf.backPatch($7.nextList, codeBuf.nextQuad());
@@ -506,11 +515,11 @@ LVAL:
 
 // control statements (if-else, while-do)
 CNTRL:
-                if_tok BEXP then_tok M STMT N else_tok M STMT{
+                if_tok BEXP then_tok M STMT else_tok N M STMT{
 					codeBuf.backPatch($2.trueList, $4.quad);
 					codeBuf.backPatch($2.falseList, $8.quad);
 					//merge STMT1.nextList, N.nextList and STMT2.nextList into CNTRL.nextList
-					codeBuf.merge($5.nextList, $6.nextList, $$.nextList);
+					codeBuf.merge($5.nextList, $7.nextList, $$.nextList);
 					codeBuf.merge($9.nextList, $$.nextList, $$.nextList);
                  }
             |
@@ -576,13 +585,11 @@ BEXP:
                         $$.trueList.push_back(codeBuf.nextQuad() + 1);
                         $$.falseList.push_back(codeBuf.nextQuad() + 2);
                         $$.place = nextFreeRegI;
-                        ++nextFreeRegI;
                     }
                     else {
                         $$.trueList.push_back(codeBuf.nextQuad() + 2);
                         $$.falseList.push_back(codeBuf.nextQuad() + 3);
                         $$.place = nextFreeRegF;
-                        ++nextFreeRegF;
                     }
 
                     if ($2.name == "==") {
@@ -831,19 +838,27 @@ EXP:
 // function call
 CALL:
                 id_tok '(' CALL_ARGS ')'{
+                    cout << pendingFunc.first << endl;
                     map<string, FunctionInformation>::iterator itr = implementedFunctions.find($1.name);
                     bool implemented = false;
+                    FunctionInformation func;
                     if ( itr != implementedFunctions.end()) {
                         implemented = true;
+                        func = itr->second;
+                    }
+                    else if ( pendingFunc.first == $1.name) {
+                        // this is a recursive call
+                        implemented = true;
+                        func = pendingFunc.second;
                     }
                     else {
                         itr = declaredFunctions.find($1.name);
                         if (itr == declaredFunctions.end()) {
                             semanticError("undeclared function '" + $1.name + "'");
                         }
+                        func = itr->second;
                     }
                     /* found a function implementation/declaration */
-                    FunctionInformation &func = itr->second;
                     if ( func.argTypes != $3.argTypes ) {
                         semanticError("bad function call"); // TODO: elaborate on error
                     }
@@ -891,7 +906,7 @@ CALL:
 
                     // now we have returned, need to restore our state and save the return value
 
-                    codeBuf.emit("SUB2I I2 I2 " + intToString(savedStateOffset));
+                    codeBuf.emit("SUBTI I2 I2 " + intToString(savedStateOffset));
 
                     int restoredStateOffset = 0;
                     for (int i=0; i < nextFreeRegI; ++i) {
@@ -957,7 +972,7 @@ M:
 N:
 				/*epsilon*/ {
 				$$.nextList.push_back(codeBuf.nextQuad());
-				codeBuf.emit("UJUMP ");
+				codeBuf.emit("UJUMP");
 				}
 ;
 %%
@@ -979,12 +994,38 @@ int main(int argc, char* argv[]){
 	
 	yyparse();
 	
-    codeBuf.addHeader();
+    // create the header for the file
+	string unimplementedHeader = "<unimplemented>";
+	string implementedHeader = "<implemented>";
+	map<string, FunctionInformation>:: iterator itr;
+	// create headed line for the implemented and unimplemented functions
+	itr = implementedFunctions.begin();
+	while (itr != implementedFunctions.end()) {
+		FunctionInformation currentFunc = itr->second;
+		implementedHeader = implementedHeader + " " + itr->first + "," + intToString(currentFunc.locationInFile);
+		++itr;
+	}
+	itr = declaredFunctions.begin();
+	while (itr != declaredFunctions.end()) {
+		FunctionInformation currentFunc = itr->second;
+		if (currentFunc.locationInFile == -1) {
+			// function is unimplemented
+			unimplementedHeader += " " + itr->first;
+			for (int i=0; i < currentFunc.callLocations.size(); ++i) {
+				unimplementedHeader += "," + intToString(currentFunc.callLocations[i]);
+			}
+		}
+		++itr;
+	}
 
 	ofstream output;
 	string outfileName = fileName.substr(0, fileName.size() - 3) + "rsk";  // TODO: make sure this replaces .cmm with .rsk
 
 	output.open(outfileName.c_str());
+    output << "<header>" << endl;
+    output << unimplementedHeader << endl;
+    output << implementedHeader << endl;
+    output << "</header>" << endl;
 	output << codeBuf.getCodeString();
 	output.close();
 	

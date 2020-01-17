@@ -21,7 +21,6 @@ class CodeBuffer {
         void backPatch(vector<int>& list, int quad);
         int nextQuad();
 		void merge(vector<int>& src1, vector<int>& src2, vector<int>& dst);
-        void addHeader();
         string getCodeString();
     private:
         vector<string> code; // TODO: should we append directly to the file?
@@ -86,7 +85,7 @@ static int nextFreeRegF = 0; // next empty float reg
 static int funcStartingLine; // save the first line off the func implementation 
 static int currentStackOffset = 0; //TODO: zero this when entering a function
 static types functionReturnType;
-
+static pair<string, FunctionInformation> pendingFunc;
 #define YYSTYPE Node
 extern FILE *yyin;
 #endif

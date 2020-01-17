@@ -1,0 +1,14 @@
+int foo2();
+int foo(c: int);
+
+void main() {
+a:int;
+b: int;
+c: int;
+
+   a =2;
+   b = foo(a) > a ? 20 : 10;
+   c = foo(a) < a ? 20 : 10;
+   write(b);
+   write(c);
+}
