@@ -1,0 +1,23 @@
+float power (c: int, m:int@)
+{
+    d:int;
+    if @m==0 then return 1;
+    if @m==1 then return c;
+	@m = @m -1;
+    d=(int)power(c,m);
+    return (float)(d*c);
+}
+
+float power (c: int@, m:int);
+
+void main()
+{
+    n:volatile int;
+    b, a:int;
+	m:int@;
+    read(a);
+    read(n);
+	m = &n;
+    b = (int)(power (m,n));
+    write(b);
+}
