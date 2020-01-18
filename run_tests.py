@@ -21,6 +21,7 @@ def compile():
 def runTests():
     for fileName in os.listdir("tests"):
         if(fileName.endswith(".e")):
+            print("Running " + fileName)
             os.system("./rx-vm1.1 tests/" + fileName)
 
 if __name__ == "__main__":
