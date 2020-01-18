@@ -1,0 +1,10 @@
+void main()
+{
+    write("\nTest: check dangling else \n");
+    a: int;
+    a = 1;
+    if 5 < 7 then 
+        if 3 < 1 then a = 3;
+        else a = 5;
+    write("should be 5: "); write(a); write("\n");
+}

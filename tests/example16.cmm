@@ -1,0 +1,23 @@
+int func(a,b: int, d,e: float)
+{
+    write(d+e);
+    return a+b;
+}
+
+void main()
+{
+    write("\nTest: check multiple definitions of same type \n");
+    a,b,c: int;
+    d,e,f: float;
+    a = 1;
+    b = 2;
+    c = a + b;
+    write("should be 3: "); write(c); write("\n");
+    d = 1.2;
+    e = 2.4;
+    f = d + e;
+    write("should be 3.6: "); write(f); write("\n");
+    write("should be 3.6: ");
+    a = func(a,b,d,e);
+    write("\nshould be 3: "); write(a);write("\n");
+}

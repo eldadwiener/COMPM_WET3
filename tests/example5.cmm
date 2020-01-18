@@ -1,15 +1,17 @@
 void main()
 {
+    write("\nTest: standard pointer operations (dereference/reference, volatile, etc.)\n");
 	a, b:int;
 	c, d : float;
 	x : volatile int;
 	p : int@;
 	x = 5;
 	p = &x;
-	write(@p);
-	read(@p);
-	write(x);
-	a = x;
+	write("dereferenced pointer, should be 5: "); write(@p); write("\n");
+	write("reading into the dereferenced pointer: ");read(@p);
+	write("should equal the entered value: "); write(x); write("\n");
+	write("check if test1 still works with volatiles: \n");
+    a = x;
 	read(b);
 	if a < b then write(a);
 	else write(b);

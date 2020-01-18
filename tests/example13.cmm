@@ -1,27 +1,9 @@
-int func(b: int)
-{
-    a: int;
-    a = b;
-    return a*a;
-}
 
 void main()
 {
-    write("\nTest: Multiblock test\n");
-    a: int;
-    a = 3;
-    {
-        a: float;
-        a = 7.5;
-        write("should be 7.5: ");write(a);
-        {
-            a: int;
-            a = 9;
-            write("\nshould be 9: ");write(a);
-        }
-        write("\nshould be 7.5: ");write(a);
-    }
-    func(a);
-    write("\nshould be 3: ");write(a);
-    write("\n");
+    write("\nTest: check \"(BEXP)\" \n");
+    if ( (2 < 3) ) then
+        write("2 < 3 good!!");
+    else
+        write("2 > 3 bad!!");
 }

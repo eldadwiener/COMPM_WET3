@@ -1,0 +1,12 @@
+void main()
+{
+    write("\nTest: check \"(BEXP)\" \n");
+    if ( (2 < 3) ) then
+        write("2 < 3 good!!\n");
+    else
+        write("2 > 3 bad!!\n");
+    if ( (2 > 3) ) then
+        write("2 > 3 bad!!\n");
+    else
+        write("2 < 3 good!!\n");
+}
