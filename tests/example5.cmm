@@ -1,0 +1,22 @@
+void main()
+{
+	a, b:int;
+	c, d : float;
+	x : volatile int;
+	p : int@;
+	x = 5;
+	p = &x;
+	write(@p);
+	read(@p);
+	write(x);
+	a = x;
+	read(b);
+	if a < b then write(a);
+	else write(b);
+	{ # Start new BLK with local var a
+		a: int;
+	        a = b + 256;
+        	write("\na'="); write(a);
+    }
+    write("\nat main BLK a="); write(a); write("\n");
+}
