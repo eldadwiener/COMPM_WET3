@@ -1,22 +1,23 @@
-int power (c: int@, m:int)
+int power (c: int, m:int@)
 {
     d:int;
-    if m==0 then return 1;
-    if m==1 then return @c;
-    d=power(c,m-1);
-    return d*(@c);
+    if @m==0 then return 1;
+    if @m==1 then return c;
+	@m = @m -1;
+    d=power(c,m);
+    return d*c;
 }
 
 int power (c: int@, m:int);
 
 void main()
 {
-    a:volatile int;
-    b, n:int;
+    n:volatile int;
+    b, a:int;
 	m:int@;
     read(a);
-	m = &a;
     read(n);
+	m = &n;
     b = power (m,n);
     write(b);
 }
