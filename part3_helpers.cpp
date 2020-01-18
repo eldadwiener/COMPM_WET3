@@ -12,7 +12,6 @@ string intToString(int num) {
 }
 
 void CodeBuffer::emit(string code) {
-	std::cout << nextQuad() << ")" << code << endl; // TODO: remove this print
     this->code.push_back(code);
 }
 

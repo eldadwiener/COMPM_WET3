@@ -124,6 +124,10 @@ FDEFS:
 
 FUNC_ENTRY:
                 /* epsilon */ {
+					//check if the func already implemented
+					if (implementedFunctions.find(pendingFunc.first) != implementedFunctions.end()){
+						semanticError("function '" + pendingFunc.first + "' already implemented");
+					}
                     // make sure the current function is aware of itself, for recursion
                     funcStartingLine = codeBuf.nextQuad();
                     pendingFunc.second.locationInFile = funcStartingLine;
@@ -137,7 +141,6 @@ FUNC_ENTRY:
 // a single function declaration
 FUNC_API:
                 TYPE id_tok '(' FUNC_ARGS ')' {
-                    cout << "in func API for func: " << $2.name << endl;
 					//save the function's: name, type and arguments (name and type)
                     FunctionInformation func;
 					func.argTypes = $4.argTypes;
@@ -859,7 +862,6 @@ EXP:
 // function call
 CALL:
                 id_tok '(' CALL_ARGS ')'{
-                    cout << pendingFunc.first << endl;
                     map<string, FunctionInformation>::iterator itr = implementedFunctions.find($1.name);
                     bool implemented = false;
                     FunctionInformation *tmpfunc;
