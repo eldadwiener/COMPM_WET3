@@ -1,0 +1,17 @@
+int foo2();
+int foo(c: int@);
+
+void main() {
+a: int@;
+b, c: int;
+d : volatile int;
+
+   d =2;
+   a = &d;
+   c = foo(a);
+   write(c);
+   b = foo(a) > d ? 20 : 10;
+   c = foo(a) < d ? 20 : 10;
+   write(b);
+   write(c);
+}
