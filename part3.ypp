@@ -45,7 +45,7 @@ PROGRAM:        FDEFS {
 ;
 /* representation of function definitions */
 FDEFS:
-                FDEFS M FUNC_API { funcStartingLine = codeBuf.nextQuad(); pendingFunc.second.locationInFile = funcStartingLine; } BLK {
+                FDEFS M FUNC_API { funcStartingLine = codeBuf.nextQuad(); pendingFunc.second.locationInFile = funcStartingLine; currentStackOffset = 0; nextFreeRegI = 3; nextFreeRegF = 0;} BLK {
 					//check for already implemented function
 					if (implementedFunctions.find($3.name) != implementedFunctions.end()) {
 						semanticError("function '" + $3.name + "' already implemented");
@@ -178,6 +178,8 @@ FUNC_ARGLIST:
 						//insert var to vars vector and update its type
 						$$.argDefinitions.push_back($3.argDefinitions[i]);
 						$$.argTypes.push_back($3.type);
+						cout << "arg #" << i+1 << " name: " << $3.argDefinitions[i] << ", type: " <<  $3.type  <<endl;
+
 					}
                  }
             |
@@ -186,6 +188,7 @@ FUNC_ARGLIST:
 						//insert var to vars vector and update its type
 						$$.argDefinitions.push_back($1.argDefinitions[i]);
 						$$.argTypes.push_back($1.type);
+						cout << "arg #" << i+1 << " name: " << $1.argDefinitions[i] << ", type: " <<  $1.type <<endl;
 					}
 				}
 ;
@@ -210,6 +213,7 @@ DCL:            id_tok ':' TYPE {
                 id_tok ',' DCL {
                     $$.type = $3.type;
                     $$.argDefinitions.push_back($1.name);
+					$$.argDefinitions.insert($$.argDefinitions.end() ,$3.argDefinitions.begin(), $3.argDefinitions.end()); //TODO: check it
                 }
 ;
 
