@@ -1,6 +1,5 @@
 int power (c: int, m:int)
 {
-    write(m);
     d:int;
     if m==0 then return 1;
     if m==1 then return c;

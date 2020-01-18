@@ -7,6 +7,8 @@ b: int;
 c: int;
 
    a =2;
+   c = foo(a);
+   write(c);
    b = foo(a) > a ? 20 : 10;
    c = foo(a) < a ? 20 : 10;
    write(b);

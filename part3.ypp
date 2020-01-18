@@ -45,7 +45,7 @@ PROGRAM:        FDEFS {
 ;
 /* representation of function definitions */
 FDEFS:
-                FDEFS M FUNC_API { funcStartingLine = codeBuf.nextQuad(); pendingFunc.second.locationInFile = funcStartingLine; currentStackOffset = 0; nextFreeRegI = 3; nextFreeRegF = 0;} BLK {
+                FDEFS M FUNC_API FUNC_ENTRY BLK {
 					//check for already implemented function
 					if (implementedFunctions.find($3.name) != implementedFunctions.end()) {
 						semanticError("function '" + $3.name + "' already implemented");
@@ -89,37 +89,49 @@ FDEFS:
                     // the marker is here to fix shift/reduce conflicts with func definition
 					//TODO: what about main declaration?
 					//check for already declared function
-					if (declaredFunctions.find($2.name) != declaredFunctions.end()) {
-						semanticError("function '" + $2.name + "' already declared");
+					if (declaredFunctions.find($3.name) != declaredFunctions.end()) {
+						semanticError("function '" + $3.name + "' already declared");
 					}
 					
 					//create new FunctionInformation according to the FUNC_API info
 					FunctionInformation funcInfo;
-					funcInfo.argTypes = $2.argTypes;
-					funcInfo.argNames = $2.argDefinitions;
-					funcInfo.returnType = $2.type;
+					funcInfo.argTypes = $3.argTypes;
+					funcInfo.argNames = $3.argDefinitions;
+					funcInfo.returnType = $3.type;
 					funcInfo.locationInFile = -1;
 
 					//check if the function already implemented
-					std::map<string, FunctionInformation>::iterator itr = implementedFunctions.find($2.name);
+					std::map<string, FunctionInformation>::iterator itr = implementedFunctions.find($3.name);
 					if (itr != implementedFunctions.end()) {
 						FunctionInformation implemetedFuncInfo = itr->second;
 						//check for args names and types
 						if ((funcInfo.argTypes != implemetedFuncInfo.argTypes) || //args type check
 							(funcInfo.argNames != implemetedFuncInfo.argNames) || //args name check 
 							(funcInfo.returnType != implemetedFuncInfo.returnType)) { // return value type check
-							semanticError("bad declaration for function named: '" + $2.name + "'");
+							semanticError("bad declaration for function named: '" + $3.name + "'");
 						}
 						// the declaration and ipmlementation are equals
 						funcInfo.locationInFile = implemetedFuncInfo.locationInFile;
 					}
 					//insert the func-info to the declared-functions data base
-					declaredFunctions.insert(std::pair<string, FunctionInformation>($2.name, funcInfo));
+					declaredFunctions.insert(std::pair<string, FunctionInformation>($3.name, funcInfo));
 					//clear the symbol table
 					symTable.clear();
 				}
             |
                /* epsilon */       {  }
+;
+
+FUNC_ENTRY:
+                /* epsilon */ {
+                    // make sure the current function is aware of itself, for recursion
+                    funcStartingLine = codeBuf.nextQuad();
+                    pendingFunc.second.locationInFile = funcStartingLine;
+                    // update stack offset and regs for current function
+                    currentStackOffset = 0;
+                    nextFreeRegI = 3;
+                    nextFreeRegF = 0;
+                }
 ;
 
 // a single function declaration
@@ -178,17 +190,16 @@ FUNC_ARGLIST:
 						//insert var to vars vector and update its type
 						$$.argDefinitions.push_back($3.argDefinitions[i]);
 						$$.argTypes.push_back($3.type);
-						cout << "arg #" << i+1 << " name: " << $3.argDefinitions[i] << ", type: " <<  $3.type  <<endl;
-
 					}
                  }
             |
                 DCL { 
+                    $$.argDefinitions.clear();
+                    $$.argTypes.clear();
 					for (int i = 0; i < $1.argDefinitions.size(); ++i) {
 						//insert var to vars vector and update its type
 						$$.argDefinitions.push_back($1.argDefinitions[i]);
 						$$.argTypes.push_back($1.type);
-						cout << "arg #" << i+1 << " name: " << $1.argDefinitions[i] << ", type: " <<  $1.type <<endl;
 					}
 				}
 ;
@@ -205,12 +216,14 @@ DCL:            id_tok ':' TYPE {
                     if ($3.type == cmm_void) {
                         semanticError("Cannot declare void variable");
                     }
+                    $$.argDefinitions.clear();
                     // all definitions will be handled by STMT or the function
                     $$.type = $3.type;
                     $$.argDefinitions.push_back($1.name);
                 }
             |
                 id_tok ',' DCL {
+                    $$.argDefinitions.clear();
                     $$.type = $3.type;
                     $$.argDefinitions.push_back($1.name);
 					$$.argDefinitions.insert($$.argDefinitions.end() ,$3.argDefinitions.begin(), $3.argDefinitions.end()); //TODO: check it
@@ -421,6 +434,7 @@ ASSN:
 // ternary assignment
 ASSN_C:
                 LVAL assign_tok BEXP '?' M EXP N ':' M EXP ';' {
+                    $$.nextList.clear();
                     // check if types are compatible
                     string typeChar[] = {"I", "F", "P", "", "I"}; // used to convert the "types" enum to string for easier use
                     string Ltype = typeChar[$1.type];
@@ -561,6 +575,9 @@ BEXP:
                 }
             |
                 EXP relop_tok EXP{
+                    $$.trueList.clear();
+                    $$.falseList.clear();
+                    
                     string type = "";
                     if ( $1.type == cmm_volatile && ($3.type == cmm_volatile || $3.type == cmm_int)) {
                         type = "I";
@@ -742,7 +759,7 @@ EXP:
                 }
             |
                 '(' EXP ')'{
-                    $$ = $1;
+                    $$ = $2;
                 }
             |
                 '(' TYPE ')' EXP {
@@ -845,23 +862,24 @@ CALL:
                     cout << pendingFunc.first << endl;
                     map<string, FunctionInformation>::iterator itr = implementedFunctions.find($1.name);
                     bool implemented = false;
-                    FunctionInformation func;
+                    FunctionInformation *tmpfunc;
                     if ( itr != implementedFunctions.end()) {
                         implemented = true;
-                        func = itr->second;
+                        tmpfunc = &itr->second;
                     }
                     else if ( pendingFunc.first == $1.name) {
                         // this is a recursive call
                         implemented = true;
-                        func = pendingFunc.second;
+                        tmpfunc = &pendingFunc.second;
                     }
                     else {
                         itr = declaredFunctions.find($1.name);
                         if (itr == declaredFunctions.end()) {
                             semanticError("undeclared function '" + $1.name + "'");
                         }
-                        func = itr->second;
+                        tmpfunc = &itr->second;
                     }
+                    FunctionInformation &func = *tmpfunc;
                     /* found a function implementation/declaration */
                     if ( func.argTypes != $3.argTypes ) {
                         semanticError("bad function call"); // TODO: elaborate on error
@@ -918,8 +936,10 @@ CALL:
                         restoredStateOffset += 4;
                     }
 
-                    // float representation of I2 for use in loadf
-                    codeBuf.emit("CITOF F" + intToString(nextFreeRegF) + " I2");
+                    // float representation of I2 for use in loadf, in case we need to restore any float regs
+                    if (nextFreeRegF > 0 || func.returnType == cmm_float) {
+                        codeBuf.emit("CITOF F" + intToString(nextFreeRegF) + " I2");
+                    }
 
                     for (int i=0; i < nextFreeRegF; ++i) {
                         codeBuf.emit("LOADF F" + intToString(i) + " F" + intToString(nextFreeRegF) + " " + intToString(restoredStateOffset));
@@ -962,6 +982,8 @@ CALL_ARGLIST:
                 }
             |
                 EXP  {
+                    $$.argTypes.clear();
+                    $$.argRegs.clear();
 					$$.argTypes.push_back($1.type); /* TODO: do we need to clear $1 */
                     $$.argRegs.push_back($1.place); 
                  }
@@ -975,8 +997,9 @@ M:
 
 N:
 				/*epsilon*/ {
-				$$.nextList.push_back(codeBuf.nextQuad());
-				codeBuf.emit("UJUMP");
+                    $$.nextList.clear();
+                    $$.nextList.push_back(codeBuf.nextQuad());
+                    codeBuf.emit("UJUMP");
 				}
 ;
 %%
