@@ -23,7 +23,7 @@ class CodeBuffer {
 		void merge(vector<int>& src1, vector<int>& src2, vector<int>& dst);
         string getCodeString();
     private:
-        vector<string> code; // TODO: should we append directly to the file?
+        vector<string> code;
 };
 
 class Node {
@@ -79,11 +79,10 @@ static SymbolTable symTable;
 static map<string, FunctionInformation> implementedFunctions;
 static map<string, FunctionInformation> declaredFunctions;
 static CodeBuffer codeBuf;
-// TODO: how many registers should we save for our use?
 static int nextFreeRegI = 3; // next empty int reg
 static int nextFreeRegF = 0; // next empty float reg
 static int funcStartingLine; // save the first line off the func implementation 
-static int currentStackOffset = 0; //TODO: zero this when entering a function
+static int currentStackOffset = 0;
 static types functionReturnType;
 static pair<string, FunctionInformation> pendingFunc;
 #define YYSTYPE Node

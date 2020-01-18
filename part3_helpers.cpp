@@ -75,6 +75,6 @@ Symbol SymbolTable::getVar(string varName) {
 			return itr->second;
 		}
 	}
-  Symbol errSymbol(-1,cmm_int); // TODO: make sure we check for this
+	Symbol errSymbol(-1,cmm_int);
 	return errSymbol;
 }

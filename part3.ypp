@@ -7,7 +7,6 @@ extern int yylex();
 extern char* yytext;
 extern int yylineno;
 extern FILE *yyin;
-extern void yylex_destroy();
 
 void yyerror(const char*);
 void semanticError(string msg);
@@ -87,7 +86,6 @@ FDEFS:
             |
                 FDEFS M FUNC_API ';' {
                     // the marker is here to fix shift/reduce conflicts with func definition
-					//TODO: what about main declaration?
 					//check for already declared function
 					if (declaredFunctions.find($3.name) != declaredFunctions.end()) {
 						semanticError("function '" + $3.name + "' already declared");
@@ -135,6 +133,7 @@ FUNC_ENTRY:
                     currentStackOffset = 0;
                     nextFreeRegI = 3;
                     nextFreeRegF = 0;
+                    functionReturnType = pendingFunc.second.returnType;
                 }
 ;
 
@@ -229,7 +228,7 @@ DCL:            id_tok ':' TYPE {
                     $$.argDefinitions.clear();
                     $$.type = $3.type;
                     $$.argDefinitions.push_back($1.name);
-					$$.argDefinitions.insert($$.argDefinitions.end() ,$3.argDefinitions.begin(), $3.argDefinitions.end()); //TODO: check it
+					$$.argDefinitions.insert($$.argDefinitions.end() ,$3.argDefinitions.begin(), $3.argDefinitions.end());
                 }
 ;
 
@@ -358,7 +357,7 @@ WRITE:
                         if (str[i] != '\\') {
                             toPrint = str[i];
                         }
-                        else { // TODO: check that all these work
+                        else { 
                             // from lex, we know this char must be one of: n, \, "
                             ++i;
                             if (str[i] == 'n') {
@@ -783,7 +782,6 @@ EXP:
                             $$.type = cmm_float;
                         }
                         else {
-                            // TODO: are there other casting options needed?
                             semanticError("Cast unsupported");
                         }
                     }
@@ -838,7 +836,6 @@ EXP:
                     $$.name = $1.name;
                     if ( $$.name.find('.') != std::string::npos ) {
                         // the number is a floating point
-                        // TODO: are numbers with E defined or not? fix lex file
                         codeBuf.emit("COPYF F" + intToString(nextFreeRegF) + " " + $$.name);
                         $$.place = nextFreeRegF;
                         $$.type = cmm_float;
@@ -884,7 +881,7 @@ CALL:
                     FunctionInformation &func = *tmpfunc;
                     /* found a function implementation/declaration */
                     if ( func.argTypes != $3.argTypes ) {
-                        semanticError("bad function call"); // TODO: elaborate on error
+                        semanticError("bad function call, argument types don't match");
                     }
 
                     /* start function call procedure */
@@ -951,12 +948,12 @@ CALL:
                     // save the return value
                     $$.type = func.returnType;
                     if (func.returnType == cmm_float) {
-                        codeBuf.emit("LOADF F" + intToString(nextFreeRegF) + " F" + intToString(nextFreeRegF) + " " + intToString(savedStateOffset - 4)); // TODO: is the -4 needed?
+                        codeBuf.emit("LOADF F" + intToString(nextFreeRegF) + " F" + intToString(nextFreeRegF) + " " + intToString(savedStateOffset - 4)); 
                         $$.place = nextFreeRegF;
                         ++nextFreeRegF;
                     }
                     else if (func.returnType == cmm_int) {
-                        codeBuf.emit("LOADI I" + intToString(nextFreeRegI) + " I2" + " " + intToString(savedStateOffset - 4)); // TODO: is the -4 needed?
+                        codeBuf.emit("LOADI I" + intToString(nextFreeRegI) + " I2" + " " + intToString(savedStateOffset - 4));
                         $$.place = nextFreeRegI;
                         ++nextFreeRegI;
                     }
@@ -986,7 +983,7 @@ CALL_ARGLIST:
                 EXP  {
                     $$.argTypes.clear();
                     $$.argRegs.clear();
-					$$.argTypes.push_back($1.type); /* TODO: do we need to clear $1 */
+					$$.argTypes.push_back($1.type); 
                     $$.argRegs.push_back($1.place); 
                  }
 ;
@@ -1048,7 +1045,7 @@ int main(int argc, char* argv[]){
 	}
 
 	ofstream output;
-	string outfileName = fileName.substr(0, fileName.size() - 3) + "rsk";  // TODO: make sure this replaces .cmm with .rsk
+	string outfileName = fileName.substr(0, fileName.size() - 3) + "rsk";
 
 	output.open(outfileName.c_str());
     output << "<header>" << endl;
@@ -1058,7 +1055,6 @@ int main(int argc, char* argv[]){
 	output << codeBuf.getCodeString();
 	output.close();
 	
-	yylex_destroy(); // TODO: is this needed?
 	return 0;
 	
 }

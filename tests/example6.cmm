@@ -8,7 +8,7 @@ int power (c: int, m:int@)
     return d*c;
 }
 
-int power (c: int@, m:int);
+int power (c: int, m:int@);
 
 void main()
 {
@@ -18,6 +18,8 @@ void main()
     read(a);
     read(n);
 	m = &n;
-    b = power (m,n);
+    b = power (a,m);
+    write(@m);
+    write(m);
     write(b);
 }
