@@ -140,6 +140,12 @@ FUNC_ENTRY:
 // a single function declaration
 FUNC_API:
                 TYPE id_tok '(' FUNC_ARGS ')' {
+                    if ($1.type == cmm_pint) {
+                        semanticError("function with pointer return type");
+                    }
+                    if ($1.type == cmm_volatile) {
+                        semanticError("function with volatile return type");
+                    }
 					//save the function's: name, type and arguments (name and type)
                     FunctionInformation func;
 					func.argTypes = $4.argTypes;
@@ -186,6 +192,9 @@ FUNC_ARGS:
 
 FUNC_ARGLIST:
                 FUNC_ARGLIST ',' DCL {
+                    if ($3.type == cmm_volatile) {
+                        semanticError("Functions cant accept volatile arguments");
+                    }
 					$$.argDefinitions = $1.argDefinitions;
 					$$.argTypes = $1.argTypes;
 					for (int i = 0; i < $3.argDefinitions.size(); ++i) {
@@ -196,6 +205,9 @@ FUNC_ARGLIST:
                  }
             |
                 DCL { 
+                    if ($1.type == cmm_volatile) {
+                        semanticError("Functions cant accept volatile arguments");
+                    }
                     $$.argDefinitions.clear();
                     $$.argTypes.clear();
 					for (int i = 0; i < $1.argDefinitions.size(); ++i) {
@@ -974,6 +986,9 @@ CALL_ARGS:
 
 CALL_ARGLIST:
                 CALL_ARGLIST ',' EXP{
+                    if ($3.type == cmm_volatile) {
+                        semanticError("Functions cant accept volatile arguments");
+                    }
 					$$.argTypes = $1.argTypes;
 					$$.argRegs = $1.argRegs;
 					$$.argTypes.push_back($3.type);
@@ -981,6 +996,9 @@ CALL_ARGLIST:
                 }
             |
                 EXP  {
+                    if ($1.type == cmm_volatile) {
+                        semanticError("Functions cant accept volatile arguments");
+                    }
                     $$.argTypes.clear();
                     $$.argRegs.clear();
 					$$.argTypes.push_back($1.type); 

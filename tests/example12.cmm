@@ -1,0 +1,11 @@
+int noRet()
+{
+    write("in noRet\n");
+}
+
+void main()
+{
+    write("\nTest: int func without return statement\n");
+    noRet();
+
+}

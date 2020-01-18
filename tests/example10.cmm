@@ -1,0 +1,14 @@
+void main()
+{
+    write("\nTest: cast precedence over larger expression\n");
+    a: int;
+    b: float;
+    c: float;
+    a = 5;
+    b = 2.5;
+    c = (float)a + b;
+    write("should be 7.5: ");
+    write(c);
+    write("\n");
+
+}

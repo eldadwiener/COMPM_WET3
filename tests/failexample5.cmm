@@ -1,0 +1,7 @@
+void main()
+{
+    write("\nTest: non-volatile pointer\n");
+    a: int;
+    b: int@;
+    b = &a;
+}

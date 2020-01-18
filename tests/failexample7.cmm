@@ -1,0 +1,14 @@
+volatile int func(a: int)
+{
+    b: volatile int;
+    b = a;
+    return b;
+}
+
+void main()
+{
+    write("\nTest: function with volatile return value\n");
+    a: int;
+    a = 5;
+    func(a);
+}

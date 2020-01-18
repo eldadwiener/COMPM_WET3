@@ -1,21 +1,23 @@
 import os
+import re
 
 def compile():
     os.system("make")
-
+    os.system("rm tests/*\.rsk")
     for fileName in os.listdir("tests"):
         if(fileName.endswith(".cmm")):
             print("Compiling " + fileName)
             os.system("./rx-cc tests/" + fileName)
     n = 1
     while(True):
+        isTestNFile = re.compile("[^0-9]*" + str(n) + "[^0-9]*\.rsk")
         files = ""
         for fileName in os.listdir("tests"):
-            if(fileName.endswith(".rsk") and str(n) in fileName):
+            if(isTestNFile.match(fileName) is not None):
                 files = files + " tests/" + fileName
         if(files == ""):
             break
-        print("Linking test number " + str(n))
+        print("Linking test number " + str(n) + ", Files: " + files)
         os.system("./rx-linker " + files)
         os.system("cp out.e tests/out" + str(n) + ".e")
         n = n + 1

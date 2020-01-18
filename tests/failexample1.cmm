@@ -1,0 +1,14 @@
+void main()
+{
+    write("\nTest: try adding 2 ints together, but cast one to float first\n");
+    a: int;
+    b: int;
+    c: int;
+    a = 5;
+    b = 2.5;
+    c = (float)a + b;
+    write("should be 7.5: ");
+    write(c);
+    write("\n");
+
+}

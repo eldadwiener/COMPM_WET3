@@ -1,0 +1,5 @@
+void main()
+{
+    write("Testing if escaped characters work correctly: (newline)\n");
+    write("backslash: \\, quotes: \", (newline)\n");
+}
