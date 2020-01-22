@@ -11,6 +11,7 @@ int power (c: int, m:int);
 
 void main()
 {
+	write("\nMoodle Test 2 (recursion)\n");
     a:int;
     b:int;
     n:int;
@@ -18,5 +19,5 @@ void main()
     read(a);
     read(n);
     b = power (a,n);
-    write(b);
+    write("should be a^n : "); write(b); write("\n");
 }

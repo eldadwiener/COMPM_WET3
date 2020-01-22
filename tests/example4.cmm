@@ -1,10 +1,12 @@
 void main()
 {
+  write("\nMoodle Test 4 (if then else)\n");
   a:float;
   b:float;
 
   read(a);
   read(b);
+  write("should be the smaller number: ");
   if a < b then write(a);
   else write(b);
   write("\nExample done\n");
