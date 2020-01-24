@@ -1,0 +1,5 @@
+
+Test: check "(BEXP)" 
+2 < 3 good!!
+2 < 3 good!!
+Reached Halt.

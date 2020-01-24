@@ -1,0 +1,15 @@
+
+Test: check rel-ops 
+2 < 3 good!!
+2 !< 2 good!!
+2 < 3 good!!
+2 !> 2 good!!
+2 != 3 good!!
+2 = 2 good!!
+2 != 3 good!!
+2 = 2 good!!
+2 <= 3 good!!
+2 <= 2 good!!
+2 < 3 good!!
+2 >= 2 good!!
+Reached Halt.

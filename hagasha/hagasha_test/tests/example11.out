@@ -1,0 +1,7 @@
+
+Test: void func with/without return statement
+In noRet
+back in main
+In withRet
+back in main
+Reached Halt.

@@ -1,0 +1,7 @@
+
+Test: check multiple definitions of same type 
+should be 3: 3 
+should be 3.6: 3.600000 
+should be 3.6: 3.600000 
+should be 3: 3 
+Reached Halt.

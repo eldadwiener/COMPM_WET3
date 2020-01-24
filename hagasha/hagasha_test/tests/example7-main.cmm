@@ -1,0 +1,18 @@
+int foo2();
+int foo(c: int@);
+
+void main() {
+write("\nTest: passing pointer to function in different file\n");
+a: int@;
+b, c: int;
+d : volatile int;
+
+   d =2;
+   a = &d;
+   c = foo(a);
+   write("should be 3: "); write(c); write("\n");
+   b = foo(a) > d ? 20 : 10;
+   c = foo(a) < d ? 20 : 10;
+   write("should be 20: "); write(b); write("\n");
+   write("should be 10: "); write(c); write("\n");
+}

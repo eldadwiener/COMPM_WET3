@@ -1,0 +1,12 @@
+float func(a: int, b: float)
+{
+    return (float)a + b;
+}
+
+
+void main()
+{
+    write("\nTest: call function with bad argument types\n");
+    a, b: float;
+    write(func(a,b));
+}

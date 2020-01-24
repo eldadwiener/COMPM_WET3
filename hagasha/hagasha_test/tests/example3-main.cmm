@@ -1,0 +1,16 @@
+int foo2();
+int foo(c: int);
+
+void main() {
+	write("\nMoodle Test 3 (multifile function declaration/definitions)\n");
+a:int;
+b: int;
+c: int;
+
+   a =2;
+   b = foo(a) > a ? 20 : 10;
+   c = foo(a) < a ? 20 : 10;
+   write("should be 20: "); write(b); write("\n");
+   write("should be 10: "); write(c); write("\n");
+   write("should be 3: foo(2)="); write(foo(a)); write("\n");
+}

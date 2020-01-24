@@ -1,0 +1,19 @@
+void main()
+{
+	write("\nMoodle Test 1 (block context)\n");
+	a:int;
+        b:int;
+
+	read(a);
+	read(b);
+	write("should be the smaller number: ");
+	if a < b then write(a);
+	else write(b);
+	write("\n");
+	{ # Start new BLK with local var a
+		a: int;
+	        a = b + 256;
+        	write("\na'="); write(a); write(" (should be 256 + second number) ");
+    }
+    write("\nat main BLK a="); write(a); write("\n");
+}

@@ -1,0 +1,25 @@
+int power (c: int, m:int@)
+{
+    d:int;
+    if @m==0 then return 1;
+    if @m==1 then return c;
+	@m = @m -1;
+    d=power(c,m);
+    return d*c;
+}
+
+int power (c: int, m:int@);
+
+void main()
+{
+    write("\nTest: recursive functions, this should calculate powers of numbers\n");
+    n:volatile int;
+    b, a:int;
+	m:int@;
+    write("enter base number: "); read(a);
+    write("enter power: "); read(n);
+	m = &n;
+    b = power (a,m);
+    write("should be 1/0: "); write(@m); write("\n");
+    write("should be the base number to the power of power: "); write(b); write("\n");
+}

@@ -61,13 +61,12 @@ if __name__ == "__main__":
     clearCompiledFiles()
     compile()
     n = raw_input("Run executables? y/n (enter test # for a specific test)").lower()
-    auto = raw_input("Run automatically with diff? y/n (some tests take user input otherwise)")
     if (n == "y"):
+        auto = raw_input("Run automatically with diff? y/n (some tests take user input otherwise)")
         runTests(auto = (auto == "y"))
+        diff()
     else:
         try:
-            runTests(n = int(n), auto = (auto == "y"))
+            runTests(n = int(n))
         except:
             pass
-    if (auto == "y"):
-            diff()

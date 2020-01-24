@@ -1,0 +1,11 @@
+void main()
+{
+    write("\nTest: check while loops \n");
+    a: int;
+    a = 5;
+    while ( a >= 0 ) do {
+        write("In while loop, a = "); write(a); write("\n");
+        a = a-1;
+    }
+    write("finished while loop, a should be -1: a = "); write(a); write("\n");
+}

@@ -1,0 +1,21 @@
+void noRet()
+{
+    write("In noRet\n");
+    return 5.1;
+}
+
+void withRet()
+{
+    write("In withRet\n");
+    return;
+}
+
+void main()
+{
+    write("\nTest: void func with bad return statement\n");
+    
+    noRet();
+    write("back in main\n");
+    withRet();
+    write("back in main\n");
+}

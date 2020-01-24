@@ -1,0 +1,6 @@
+
+Moodle Test 3 (multifile function declaration/definitions)
+should be 20: 20 
+should be 10: 10 
+should be 3: foo(2)=3 
+Reached Halt.

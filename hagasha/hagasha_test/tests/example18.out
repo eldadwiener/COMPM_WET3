@@ -1,0 +1,10 @@
+
+Test: check while loops 
+In while loop, a = 5 
+In while loop, a = 4 
+In while loop, a = 3 
+In while loop, a = 2 
+In while loop, a = 1 
+In while loop, a = 0 
+finished while loop, a should be -1: a = -1 
+Reached Halt.

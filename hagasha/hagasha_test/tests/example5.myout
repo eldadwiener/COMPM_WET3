@@ -1,0 +1,9 @@
+
+Test: standard pointer operations (dereference/reference, volatile, etc.)
+dereferenced pointer, should be 5: 5 
+reading into the dereferenced pointer: Input integer?:should equal the entered value: 9 
+check if test1 still works with volatiles: 
+Input integer?:6 
+a'=262 
+at main BLK a=9 
+Reached Halt.

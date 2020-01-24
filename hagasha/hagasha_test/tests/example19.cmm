@@ -1,0 +1,13 @@
+void main()
+{
+    write("\nTest: numbers operator precedence\n");
+	a : int;
+    x : volatile int;
+	p : int@;
+	x = 12;
+	p = &x;
+    a = @p/2+x*x-5*x;
+    write("should be 90: "); write(a); write("\n");
+    a =  @p/(x-8)*x-5*x;
+    write("should be -24: "); write(a); write("\n");
+}

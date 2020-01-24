@@ -1,0 +1,4 @@
+
+Test: cast precedence over larger expression
+should be 7.5: 7.500000 
+Reached Halt.

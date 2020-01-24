@@ -1,0 +1,12 @@
+int func()
+{
+    a: volatile int;
+    a = 5;
+    return (int)a;
+}
+
+void main()
+{
+    write("\nTest: try to cast volatile to int\n");
+    func();
+}

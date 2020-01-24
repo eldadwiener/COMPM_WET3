@@ -1,0 +1,7 @@
+
+Moodle Test 1 (block context)
+Input integer?:Input integer?:should be the smaller number: 4 
+
+a'=262  (should be 256 + second number) 
+at main BLK a=4 
+Reached Halt.

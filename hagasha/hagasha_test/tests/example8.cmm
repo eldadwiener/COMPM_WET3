@@ -1,0 +1,25 @@
+float power (c: int, m:int@)
+{
+    d:int;
+    if @m==0 then return 1.0;
+    if @m==1 then return (float)c;
+	@m = @m -1;
+    d=(int)power(c,m);
+    return (float)(d*c);
+}
+
+float power (c: int, m:int@);
+
+void main()
+{
+    write("\nTest: passing pointer to recursive function\n");
+    n:volatile int;
+    b, a:int;
+	m:int@;
+    c: float;
+    write("enter base number: "); read(a);
+    write("enter power: "); read(n);
+	m = &n;
+    c = (power (a,m));
+    write("should be the base number to the power of power: "); write(c); write("\n");
+}

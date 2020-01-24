@@ -1,0 +1,5 @@
+
+Test: recursive functions, this should calculate powers of numbers
+enter base number: Input integer?:enter power: Input integer?:should be 1/0: 1 
+should be the base number to the power of power: 16807 
+Reached Halt.

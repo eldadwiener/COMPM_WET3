@@ -1,0 +1,4 @@
+
+Test: passing pointer to recursive function
+enter base number: Input integer?:enter power: Input integer?:should be the base number to the power of power: 16807.000000 
+Reached Halt.

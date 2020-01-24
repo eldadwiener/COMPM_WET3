@@ -1,0 +1,12 @@
+int intRet()
+{
+    write("In noRet\n");
+    return;
+}
+
+
+void main()
+{
+    write("\nTest: return without param from int function\n");
+    intRet();
+}
